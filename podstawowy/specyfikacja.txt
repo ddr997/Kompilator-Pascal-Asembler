@@ -1,0 +1,19 @@
+Kompilator ma mieć:
+///
+Gramatyka przykładowego języka w
+programie bison, tablica symboli i
+generator kodu dla programu
+zawierającego deklaracje zmiennych
+skalarnych, przypisania i proste
+wyrażenia całkowitoliczbowe
+
+Gramatyka, tablica symboli, generacja kodu dla zmiennych skalarnych (przechowuje tylko jedna wartosc), przypisania (id)
+proste wyrazenia calkowitoliczbowe (sum/sub?)
+
+
+
+Dodatkowe funkcjonalnosc:
+///
+Wsparcie dla typu
+zmiennoprzecinkowego, tablic,
+instrukcji sterujących i funkcji

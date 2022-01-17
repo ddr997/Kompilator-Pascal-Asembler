@@ -1,0 +1,6 @@
+
+D: id L {addtype($1, $2)}
+L: "," id L {$$=$3; addtype($2, $3)}
+L: ":" T {$$=$2}
+T: T_INTEGER {$$ = INTEGER}
+T: T_CHAR {$$ = CHAR}

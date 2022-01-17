@@ -1,5 +1,6 @@
 %{
 #include "symtable.h"
+#define YYERROR_VERBOSE 1
 unsigned next_adress = 0;
 %}
 
@@ -10,31 +11,32 @@ unsigned next_adress = 0;
 %token ID
 
 %%
-start: program {for(int i=0;i<symtable.size();i++) cout << symtable[i].name<< " " <<symtable[i].type<< " " <<symtable[i].address <<endl;}
+start: program {
+               for(int i=0;i<symtable.size();i++){
+               cout << symtable[i].name<< " " <<symtable[i].type<< " " <<symtable[i].address <<endl;}
+               }
 
-program: declarations ';' declarations
+program: declarations ';' program
        | declarations ';'
 
-declarations: ID list 
-              {
-              symtable[$1].type=(vartype)$2;
-              symtable[$1].address=next_adress;
-              if($2 == integer){
-                next_adress += 4;}
-               if($2 == real){
-                next_adress += 8;}
-              }
+declarations: ID list {
+                      symtable[$1].type=(vartype)$2;
+                      symtable[$1].address=next_adress;
+                      if($2 == integer){
+                        next_adress += 4;}
+                      if($2 == real){
+                        next_adress += 8;}
+                      }
 
-list: ',' ID list 
-      {
-      $$=$3;
-      symtable[$2].type=(vartype)$3;
-      symtable[$2].address=next_adress;
-      if($3 == integer){
-        next_adress += 4;}
-      if($3 == real){
-        next_adress += 8;}
-      }
+list: ',' ID list {
+                  $$=$3;
+                  symtable[$2].type=(vartype)$3;
+                  symtable[$2].address=next_adress;
+                  if($3 == integer){
+                    next_adress += 4;}
+                  if($3 == real){
+                    next_adress += 8;}
+                  }
     | ':' type {$$=$2;}
 
 type: T_INTEGER {$$ = integer;}
@@ -77,6 +79,5 @@ int findintable(const string& s)
 };
 
 void gencode(const string& m, int i1, int i2, int i3){
-
 }
 

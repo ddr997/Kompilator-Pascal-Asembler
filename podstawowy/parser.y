@@ -6,9 +6,12 @@ unsigned next_adress = 0;
 
 %token T_PROGRAM
 %token T_VAR
+%token T_BEGIN
+%token T_END
 %token T_INTEGER
 %token T_REAL
 %token ID
+%token NUMBER
 
 %%
 start: program {
@@ -16,10 +19,13 @@ start: program {
                cout << symtable[i].name<< " " <<symtable[i].type<< " " <<symtable[i].address <<endl;}
                }
 
-program: declarations ';' program
-       | declarations ';'
+program: declarations
+         compound_statement
 
-declarations: ID list {
+declarations: decl ';' declarations
+       | decl ';'
+
+decl: ID list {
                       symtable[$1].type=(vartype)$2;
                       symtable[$1].address=next_adress;
                       if($2 == integer){
@@ -41,6 +47,26 @@ list: ',' ID list {
 
 type: T_INTEGER {$$ = integer;}
     | T_REAL {$$ = real;}
+
+
+
+
+compound_statement: T_BEGIN statement_list T_END 
+
+statement_list: statement
+              | statement_list ';' statement
+
+statement: ID ':' '=' expression {
+          }
+
+expression: expression '+' expression {
+            $$ = $1 + $3;
+            }
+          | expression '*' expression {$$ = $1 * $3}
+          | '-' expression {$$ = $2}
+          | '(' expression ')' {$$ = $2}
+          | ID {$$ = $1} //zawiera miejsce w tablicy symboli
+          | NUMBER {$$ = $1} //tutaj tez bedzie chyba
 
 
 %%

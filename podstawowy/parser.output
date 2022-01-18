@@ -1,0 +1,197 @@
+Terminals unused in grammar
+
+    T_PROGRAM
+    T_VAR
+    T_BEGIN
+    T_END
+    T_ASSIGN
+    NUMBER
+
+
+Grammar
+
+    0 $accept: start $end
+
+    1 start: program
+
+    2 program: declarations ';' program
+    3        | declarations ';'
+
+    4 declarations: ID list
+
+    5 list: ',' ID list
+    6     | ':' type
+
+    7 type: T_INTEGER
+    8     | T_REAL
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    ',' (44) 5
+    ':' (58) 6
+    ';' (59) 2 3
+    error (256)
+    T_PROGRAM (258)
+    T_VAR (259)
+    T_BEGIN (260)
+    T_END (261)
+    T_ASSIGN (262)
+    T_INTEGER (263) 7
+    T_REAL (264) 8
+    ID (265) 4 5
+    NUMBER (266)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (15)
+        on left: 0
+    start (16)
+        on left: 1
+        on right: 0
+    program (17)
+        on left: 2 3
+        on right: 1 2
+    declarations (18)
+        on left: 4
+        on right: 2 3
+    list (19)
+        on left: 5 6
+        on right: 4 5
+    type (20)
+        on left: 7 8
+        on right: 6
+
+
+State 0
+
+    0 $accept: . start $end
+
+    ID  shift, and go to state 1
+
+    start         go to state 2
+    program       go to state 3
+    declarations  go to state 4
+
+
+State 1
+
+    4 declarations: ID . list
+
+    ','  shift, and go to state 5
+    ':'  shift, and go to state 6
+
+    list  go to state 7
+
+
+State 2
+
+    0 $accept: start . $end
+
+    $end  shift, and go to state 8
+
+
+State 3
+
+    1 start: program .
+
+    $default  reduce using rule 1 (start)
+
+
+State 4
+
+    2 program: declarations . ';' program
+    3        | declarations . ';'
+
+    ';'  shift, and go to state 9
+
+
+State 5
+
+    5 list: ',' . ID list
+
+    ID  shift, and go to state 10
+
+
+State 6
+
+    6 list: ':' . type
+
+    T_INTEGER  shift, and go to state 11
+    T_REAL     shift, and go to state 12
+
+    type  go to state 13
+
+
+State 7
+
+    4 declarations: ID list .
+
+    $default  reduce using rule 4 (declarations)
+
+
+State 8
+
+    0 $accept: start $end .
+
+    $default  accept
+
+
+State 9
+
+    2 program: declarations ';' . program
+    3        | declarations ';' .
+
+    ID  shift, and go to state 1
+
+    $default  reduce using rule 3 (program)
+
+    program       go to state 14
+    declarations  go to state 4
+
+
+State 10
+
+    5 list: ',' ID . list
+
+    ','  shift, and go to state 5
+    ':'  shift, and go to state 6
+
+    list  go to state 15
+
+
+State 11
+
+    7 type: T_INTEGER .
+
+    $default  reduce using rule 7 (type)
+
+
+State 12
+
+    8 type: T_REAL .
+
+    $default  reduce using rule 8 (type)
+
+
+State 13
+
+    6 list: ':' type .
+
+    $default  reduce using rule 6 (list)
+
+
+State 14
+
+    2 program: declarations ';' program .
+
+    $default  reduce using rule 2 (program)
+
+
+State 15
+
+    5 list: ',' ID list .
+
+    $default  reduce using rule 5 (list)

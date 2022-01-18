@@ -1,5 +1,6 @@
 %{
 #include "symtable.h"
+#define YYERROR_VERBOSE 1
 %}
 
 %token INT

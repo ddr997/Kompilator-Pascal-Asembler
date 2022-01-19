@@ -43,6 +43,7 @@ statement_list: statement
 
 statement: ID T_ASSIGN expression {
                                   SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
+                                  gencode("mov.i", $3, $1, -1);
                                   }
 
 expression: expression '+' expression {
@@ -78,3 +79,25 @@ int main()
   yyparse();
 };
 
+void gencode(string operation, int i1, int i2, int i3)
+{
+  string var1 = to_string(SYMTABLE.table[i1].address);
+  string var2 = to_string(SYMTABLE.table[i2].address);
+  string var3 = to_string(SYMTABLE.table[i3].address);
+  if (isdigit(SYMTABLE.table[i1].name[0])){ var1 = "#" + SYMTABLE.table[i1].name; }
+  if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
+  if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
+
+  if(operation == "mov.i") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
+  {
+    cout << "mov.i " << var1 << "," << var2 << endl;
+  }
+
+  if(operation == "add.i"){
+    cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "mul.i"){
+    cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+}

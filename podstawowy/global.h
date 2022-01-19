@@ -6,6 +6,7 @@ using namespace std;
 
 int yylex();
 void yyerror(char const *);
+void gencode(string, int, int, int);
 
 enum Variable_type {integer, real};
 enum Input_type {identifier, number, temporary};

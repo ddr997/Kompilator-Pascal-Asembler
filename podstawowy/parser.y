@@ -28,11 +28,15 @@ program: T_PROGRAM ID '(' identifier_list ')' ';'
         compound_statement
 
 identifier_list: ID {id_vector.push_back($1);} //niesie 
-               | identifier_list ',' ID {}
+               | identifier_list ',' ID {id_vector.push_back($3);}
 
 declarations: declarations T_VAR identifier_list ':' type ';' {
                                                               for(int i=0; i< (int) id_vector.size(); i++)
+                                                              {
+                                                              printf("%d , %d\n", id_vector[i], i);
                                                               SYMTABLE.table[id_vector[i]].type_of_variable = (Variable_type)$5;
+                                                              }
+                                                              id_vector.clear();
                                                               }
             |
 
@@ -64,6 +68,13 @@ expression: expression '+' expression {
                                       gencode("add.i", $1, $3, newtemp);
                                       }
 
+          | expression '-' expression {
+                                      int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
+                                      $$ = newtemp;
+                                      gencode("sub.i", $1, $3, newtemp);
+                                      }
+
           | expression T_MULOP expression{
                                          if(operation == "*")
                                          {
@@ -79,6 +90,14 @@ expression: expression '+' expression {
                                          $$ = newtemp;
                                          gencode(operation, $1, $3, newtemp);
                                          }
+                                         if (operation == "mod")
+                                         {
+                                         int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                         SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value % SYMTABLE.table[$3].value;
+                                         $$ = newtemp;
+                                         gencode(operation, $1, $3, newtemp);
+                                         }
+
                                          
                                          }
 
@@ -142,7 +161,7 @@ void gencode(string operation, int i1, int i2, int i3)
 
   if(operation == "mod")
   {
-
+    cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "write.i")

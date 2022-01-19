@@ -2,6 +2,7 @@
 #include "global.h"
 #include "parser.hpp"
 extern Symtable SYMTABLE;
+string operation;
 %}
 
 %option noyywrap
@@ -17,10 +18,16 @@ ID	{LETTER}({NUM}|{LETTER})*
 begin           {return T_BEGIN;}
 end             {return T_END;}
 program         {return T_PROGRAM;}
+write           {return T_WRITE;}
 var             {return T_VAR;}
 integer	        {return T_INTEGER;}
 real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
+
+[\/\*]|(div)|(mod) {
+                   operation = yytext;
+                   return T_MULOP;
+                   }
 
 {NUM}           {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
@@ -43,4 +50,3 @@ real	        {return T_REAL;}
 .	            {return yytext[0];}
 
 %%
-//STD:string(yytext,yyleng) - stworz string z yytext i wez z niego yyleng znakow. Bez yyleng tez dziala

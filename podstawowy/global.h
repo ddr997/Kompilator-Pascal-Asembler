@@ -4,11 +4,11 @@
 #include <stdio.h>
 using namespace std;
 
+extern string operation;
 int yylex();
 void yyerror(char const *);
 void gencode(string, int, int, int);
-
-enum Variable_type {integer, real};
+enum Variable_type {integer=1, real=2};
 enum Input_type {identifier, number, temporary};
 struct Record{
     Variable_type type_of_variable = integer;
@@ -16,7 +16,6 @@ struct Record{
     int value = 0;
     int address = -1;
 };
-
 class Symtable{
     public:
         Symtable();

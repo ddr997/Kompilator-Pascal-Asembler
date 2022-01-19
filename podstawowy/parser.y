@@ -2,39 +2,45 @@
 #include "global.h"
 #define YYERROR_VERBOSE 1
 Symtable SYMTABLE;
+extern string operation;
+vector <int> id_vector;
 %}
 
 %token T_PROGRAM
 %token T_VAR
 %token T_BEGIN
 %token T_END
+%token T_WRITE
 %token T_ASSIGN
 %token T_INTEGER
 %token T_REAL
+%token T_MULOP
 %token ID
 %token NUM
-%left '+'
-%left '*'
+%left '+' '-'
+%left T_MULOP
 
 %%
-start: program {
-                SYMTABLE.print_table();
-               }
+start: program { SYMTABLE.print_table(); }
 
 program: T_PROGRAM ID '(' identifier_list ')' ';'
         declarations
         compound_statement
 
-identifier_list: ID
-               | identifier_list ',' ID
+identifier_list: ID {id_vector.push_back($1);} //niesie 
+               | identifier_list ',' ID {}
 
-declarations: declarations T_VAR identifier_list ':' type ';'
+declarations: declarations T_VAR identifier_list ':' type ';' {
+                                                              for(int i=0; i< (int) id_vector.size(); i++)
+                                                              SYMTABLE.table[id_vector[i]].type_of_variable = (Variable_type)$5;
+                                                              }
             |
 
-type: standard_type
+type: standard_type {$$ = $1;}
 
 standard_type: T_INTEGER {$$ = integer;}
-    | T_REAL {$$ = real;}
+             | T_REAL {$$ = real;}
+
 
 
 
@@ -47,6 +53,9 @@ statement: ID T_ASSIGN expression {
                                   SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
                                   gencode("mov.i", $3, $1, 0);
                                   }
+          | T_WRITE '(' ID ')' {
+                                gencode("write.i", $3, 0, 0);
+                               }
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
@@ -54,17 +63,31 @@ expression: expression '+' expression {
                                       $$ = newtemp;
                                       gencode("add.i", $1, $3, newtemp);
                                       }
-          | expression '*' expression {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", temporary);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
-                                      $$ = newtemp;
-                                      gencode("mul.i", $1, $3, newtemp);
-                                      }
+
+          | expression T_MULOP expression{
+                                         if(operation == "*")
+                                         {
+                                         int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                         SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
+                                         $$ = newtemp;
+                                         gencode(operation, $1, $3, newtemp);
+                                         }
+                                         if (operation == "/" || operation == "div")
+                                         {
+                                         int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                         SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
+                                         $$ = newtemp;
+                                         gencode(operation, $1, $3, newtemp);
+                                         }
+                                         
+                                         }
+
           | '-' expression {
                            int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                            SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            $$ = newtemp;
                            }
+
           | '(' expression ')' {$$ = $2;}
           | ID {$$ = $1;} //zawiera miejsce w tablicy symboli
           | NUM {$$ = $1;} //tutaj tez bedzie chyba
@@ -97,11 +120,43 @@ void gencode(string operation, int i1, int i2, int i3)
     cout << "mov.i " << var1 << "," << var2 << endl;
   }
 
-  if(operation == "add.i"){
+  if(operation == "add.i")
+  {
     cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "mul.i"){
+  if(operation == "*")
+  {
     cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "/")
+  {
+    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "div")
+  {
+    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "mod")
+  {
+
+  }
+
+  if(operation == "write.i")
+  {
+    cout << "write.i " << var1 <<endl;
+  }
+
+  if(operation == "inttoreal")
+  {
+    cout << "inttoreal " << var1 << "," << var2 << endl;
+  }
+
+  if(operation == "realtoint")
+  {
+    cout << "realtoint " << var1 << "," << var2 << endl;
   }
 }

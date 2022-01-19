@@ -11,7 +11,7 @@ symtable.o: symtable.cpp global.h
 	g++ -c symtable.cpp
 
 parser.cpp parser.hpp: parser.y
-	bison -d -o parser.cpp parser.y
+	bison -d -v -o parser.cpp parser.y
 
 lexer.cpp : lexer.l
 	flex -o lexer.cpp lexer.l

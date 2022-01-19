@@ -1,7 +1,5 @@
-program test(input, output);
+program exmp(input, output);
 var x,y: integer;
-var z: real;
 begin
-    x := 3;
-    y := 6*x+2
+    x := 3
 end.

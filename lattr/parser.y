@@ -1,5 +1,5 @@
 %{
-#include "symtable.h"
+#include "global.h"
 #define YYERROR_VERBOSE 1
 %}
 

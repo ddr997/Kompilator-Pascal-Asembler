@@ -1,6 +1,7 @@
 %{
-#include "symtable.h"
+#include "global.h"
 #include "parser.hpp"
+extern Symtable SYMTABLE;
 %}
 
 %option noyywrap
@@ -20,12 +21,12 @@ var             {return T_VAR;}
 integer	        {return T_INTEGER;}
 real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
-{NUMBER}        {yylval=addtotable(std::string(yytext,yyleng));
+{NUMBER}        {yylval = SYMTABLE.insert_to_table(yytext);
                 return NUMBER;
                 }
-{ID}	        {yylval=addtotable(std::string(yytext,yyleng));
+{ID}	        {yylval = SYMTABLE.insert_to_table(yytext);
                 return ID;}
-.	        {return yytext[0];}
+.	            {return yytext[0];}
 
 %%
 //STD:string(yytext,yyleng) - stworz string z yytext i wez z niego yyleng znakow. Bez yyleng tez dziala

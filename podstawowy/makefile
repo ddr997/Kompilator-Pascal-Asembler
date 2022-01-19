@@ -1,17 +1,20 @@
-test: parser.o lexer.o
-	g++ parser.o lexer.o -o test
+compiler: parser.o lexer.o symtable.o
+	g++ parser.o lexer.o symtable.o -o compiler
 
-parser.o: parser.cpp symtable.h
+parser.o: parser.cpp global.h
 	g++ -c parser.cpp
 
-lexer.o : lexer.cpp parser.hpp symtable.h
+lexer.o : lexer.cpp parser.hpp global.h
 	g++ -c lexer.cpp
 
+symtable.o: symtable.cpp global.h
+	g++ -c symtable.cpp
+
 parser.cpp parser.hpp: parser.y
-	bison --debug -t -v -d -oparser.cpp parser.y
+	bison -d -o parser.cpp parser.y
 
 lexer.cpp : lexer.l
-	flex -olexer.cpp lexer.l
+	flex -o lexer.cpp lexer.l
 
 clean:
 	-rm *.o
@@ -19,4 +22,4 @@ clean:
 	-rm parser.hpp
 	-rm parser.output
 	-rm lexer.cpp
-	-rm test
+	-rm compiler

@@ -1,7 +1,7 @@
 %{
-#include "symtable.h"
+#include "global.h"
 #define YYERROR_VERBOSE 1
-unsigned next_adress = 0;
+Symtable SYMTABLE;
 %}
 
 %token T_PROGRAM
@@ -16,36 +16,24 @@ unsigned next_adress = 0;
 
 %%
 start: program {
-               for(int i=0;i<symtable.size();i++){
-               cout << symtable[i].name<< " " <<symtable[i].type<< " " <<symtable[i].address <<endl;}
+                SYMTABLE.print_table();
                }
 
 program: declarations ';' program
        | declarations ';'
 
 declarations: ID list {
-                      symtable[$1].type=(vartype)$2;
-                      symtable[$1].address=next_adress;
-                      if($2 == integer){
-                        next_adress += 4;}
-                      if($2 == real){
-                        next_adress += 8;}
+                      SYMTABLE.table[$1].type_of_variable = (VariableType)$2;
                       }
 
 list: ',' ID list {
                   $$=$3;
-                  symtable[$2].type=(vartype)$3;
-                  symtable[$2].address=next_adress;
-                  if($3 == integer){
-                    next_adress += 4;}
-                  if($3 == real){
-                    next_adress += 8;}
+                  SYMTABLE.table[$2].type_of_variable = (VariableType)$3;
                   }
     | ':' type {$$=$2;}
 
 type: T_INTEGER {$$ = integer;}
     | T_REAL {$$ = real;}
-    
 %%
 
 
@@ -59,31 +47,4 @@ int main()
 {
   yyparse();
 };
-
-symtable_t symtable;
-
-int addtotable(const string& s)
-{
-  int i;
-  for(i=0;i<symtable.size();i++) //przeszukaj tablice symboli
-    if(symtable[i].name==s) // jezeli podana nazwa juz jest w tablicy
-      return i; //zwroc indeks tablicy
-  entry d; //ze struktury entry
-  d.name=s; //nazwa identyfikatora
-  d.type=none; //typ bedzie 0
-  symtable.push_back(d); //dodaje na koniec wektora nowy element
-  return i; //zwroc indeks z tablicy, jezeli nie znalazlo to bedzie na koncu?
-};
-
-int findintable(const string& s)
-{
-  int i;
-  for(i=0;i<symtable.size();i++)
-    if(symtable[i].name==s)
-      return i;
-  return -1; //w innym wypadku nie ma jej w tablicy symboli
-};
-
-void gencode(const string& m, int i1, int i2, int i3){
-}
 

@@ -23,7 +23,7 @@ list: ',' ID list {$$=$3;
 
 
 %{
-#include "symtable.h"
+#include "global.h"
 unsigned next_adress = 0;
 %}
 

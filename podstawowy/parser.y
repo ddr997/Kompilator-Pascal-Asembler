@@ -12,28 +12,44 @@ Symtable SYMTABLE;
 %token T_INTEGER
 %token T_REAL
 %token ID
-%token NUMBER
+%token NUM
 
 %%
 start: program {
                 SYMTABLE.print_table();
                }
 
-program: declarations ';' program
-       | declarations ';'
+program: T_PROGRAM ID '(' identifier_list ')' ';'
+        declarations
+        compound_statement
 
-declarations: ID list {
-                      SYMTABLE.table[$1].type_of_variable = (VariableType)$2;
-                      }
+identifier_list: ID
+               | identifier_list ',' ID
 
-list: ',' ID list {
-                  $$=$3;
-                  SYMTABLE.table[$2].type_of_variable = (VariableType)$3;
-                  }
-    | ':' type {$$=$2;}
+declarations: declarations T_VAR identifier_list ':' type ';'
+            | %empty
 
-type: T_INTEGER {$$ = integer;}
+type: standard_type
+
+standard_type: T_INTEGER {$$ = integer;}
     | T_REAL {$$ = real;}
+
+
+
+compound_statement: T_BEGIN statement_list T_END 
+
+statement_list: statement
+              | statement_list ';' statement
+
+statement: ID T_ASSIGN expression {}
+
+expression: expression '+' expression {}
+          | expression '*' expression {}
+          | '-' expression {}
+          | '(' expression ')' {}
+          | ID {} //zawiera miejsce w tablicy symboli
+          | NUM {} //tutaj tez bedzie chyba
+
 %%
 
 

@@ -8,8 +8,8 @@ extern Symtable SYMTABLE;
 
 IGNORES       [ \t\r\n]+
 LETTER [a-zA-z]
-NUMBER [0-9]+
-ID	{LETTER}({NUMBER}|{LETTER})*
+NUM [0-9]+
+ID	{LETTER}({NUM}|{LETTER})*
 
 
 %%
@@ -21,11 +21,17 @@ var             {return T_VAR;}
 integer	        {return T_INTEGER;}
 real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
-{NUMBER}        {yylval = SYMTABLE.insert_to_table(yytext);
-                return NUMBER;
+{NUM}           {
+                yylval = SYMTABLE.insert_to_table(yytext);
+                SYMTABLE.table[yylval].value = stoi(yytext);
+                return NUM;
                 }
-{ID}	        {yylval = SYMTABLE.insert_to_table(yytext);
-                return ID;}
+{ID}	        {
+                int check_if_exists = SYMTABLE.find_in_table(yytext);
+                if(check_if_exists < 0){ yylval = SYMTABLE.insert_to_table(yytext); }
+                else{ yylval = check_if_exists; }
+                return ID;
+                }
 .	            {return yytext[0];}
 
 %%

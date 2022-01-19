@@ -1,0 +1,161 @@
+Grammar
+
+    0 $accept: start $end
+
+    1 start: prog
+
+    2 prog: decl ';' prog
+    3     | decl ';'
+
+    4 decl: type list
+
+    5 type: INT
+    6     | REAL
+
+    7 list: list ',' ID
+    8     | ID
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+',' (44) 7
+';' (59) 2 3
+error (256)
+INT (258) 5
+REAL (259) 6
+ID (260) 7 8
+
+
+Nonterminals, with rules where they appear
+
+$accept (8)
+    on left: 0
+start (9)
+    on left: 1, on right: 0
+prog (10)
+    on left: 2 3, on right: 1 2
+decl (11)
+    on left: 4, on right: 2 3
+type (12)
+    on left: 5 6, on right: 4
+list (13)
+    on left: 7 8, on right: 4 7
+
+
+state 0
+
+    0 $accept: . start $end
+
+    INT   shift, and go to state 1
+    REAL  shift, and go to state 2
+
+    start  go to state 3
+    prog   go to state 4
+    decl   go to state 5
+    type   go to state 6
+
+
+state 1
+
+    5 type: INT .
+
+    $default  reduce using rule 5 (type)
+
+
+state 2
+
+    6 type: REAL .
+
+    $default  reduce using rule 6 (type)
+
+
+state 3
+
+    0 $accept: start . $end
+
+    $end  shift, and go to state 7
+
+
+state 4
+
+    1 start: prog .
+
+    $default  reduce using rule 1 (start)
+
+
+state 5
+
+    2 prog: decl . ';' prog
+    3     | decl . ';'
+
+    ';'  shift, and go to state 8
+
+
+state 6
+
+    4 decl: type . list
+
+    ID  shift, and go to state 9
+
+    list  go to state 10
+
+
+state 7
+
+    0 $accept: start $end .
+
+    $default  accept
+
+
+state 8
+
+    2 prog: decl ';' . prog
+    3     | decl ';' .
+
+    INT   shift, and go to state 1
+    REAL  shift, and go to state 2
+
+    $default  reduce using rule 3 (prog)
+
+    prog  go to state 11
+    decl  go to state 5
+    type  go to state 6
+
+
+state 9
+
+    8 list: ID .
+
+    $default  reduce using rule 8 (list)
+
+
+state 10
+
+    4 decl: type list .
+    7 list: list . ',' ID
+
+    ','  shift, and go to state 12
+
+    $default  reduce using rule 4 (decl)
+
+
+state 11
+
+    2 prog: decl ';' prog .
+
+    $default  reduce using rule 2 (prog)
+
+
+state 12
+
+    7 list: list ',' . ID
+
+    ID  shift, and go to state 13
+
+
+state 13
+
+    7 list: list ',' ID .
+
+    $default  reduce using rule 7 (list)

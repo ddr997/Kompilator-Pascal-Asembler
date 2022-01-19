@@ -13,6 +13,8 @@ Symtable SYMTABLE;
 %token T_REAL
 %token ID
 %token NUM
+%left '+'
+%left '*'
 
 %%
 start: program {
@@ -27,7 +29,7 @@ identifier_list: ID
                | identifier_list ',' ID
 
 declarations: declarations T_VAR identifier_list ':' type ';'
-            | %empty
+            |
 
 type: standard_type
 

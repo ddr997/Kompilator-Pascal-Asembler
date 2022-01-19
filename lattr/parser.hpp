@@ -39,27 +39,15 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     T_PROGRAM = 258,
-     T_VAR = 259,
-     T_BEGIN = 260,
-     T_END = 261,
-     T_ASSIGN = 262,
-     T_INTEGER = 263,
-     T_REAL = 264,
-     ID = 265,
-     NUM = 266
+     INT = 258,
+     REAL = 259,
+     ID = 260
    };
 #endif
 /* Tokens.  */
-#define T_PROGRAM 258
-#define T_VAR 259
-#define T_BEGIN 260
-#define T_END 261
-#define T_ASSIGN 262
-#define T_INTEGER 263
-#define T_REAL 264
-#define ID 265
-#define NUM 266
+#define INT 258
+#define REAL 259
+#define ID 260
 
 
 

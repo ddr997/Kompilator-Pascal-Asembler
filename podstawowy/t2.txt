@@ -1,5 +1,6 @@
 program test(input, output);
 var x,y: integer;
 begin
-x := 3
+x := 3;
+y := 6*x
 end.

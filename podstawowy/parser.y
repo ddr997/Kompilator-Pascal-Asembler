@@ -43,18 +43,20 @@ statement_list: statement
 
 statement: ID T_ASSIGN expression {
                                   SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
-                                  gencode("mov.i", $3, $1, -1);
+                                  gencode("mov.i", $3, $1, 0);
                                   }
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
+                                      gencode("add.i", $1, $3, newtemp);
                                       }
           | expression '*' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
                                       $$ = newtemp;
+                                      gencode("mul.i", $1, $3, newtemp);
                                       }
           | '-' expression {
                            int newtemp = SYMTABLE.insert_to_table("$t", temporary);

@@ -801,34 +801,39 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 24 "lexer.l"
+#line 25 "lexer.l"
 {
-                yylval = SYMTABLE.insert_to_table(yytext);
-                SYMTABLE.table[yylval].value = stoi(yytext);
+                int check_if_exists = SYMTABLE.find_in_table(yytext);
+                if(check_if_exists < 0)
+                {
+                    yylval = SYMTABLE.insert_to_table(yytext, number);
+                    SYMTABLE.table[yylval].value = stoi(yytext);
+                }
+                else{ yylval = check_if_exists; }
                 return NUM;
                 }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 29 "lexer.l"
+#line 36 "lexer.l"
 {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
-                if(check_if_exists < 0){ yylval = SYMTABLE.insert_to_table(yytext); }
+                if(check_if_exists < 0){ yylval = SYMTABLE.insert_to_table(yytext, identifier); }
                 else{ yylval = check_if_exists; }
                 return ID;
                 }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 35 "lexer.l"
+#line 43 "lexer.l"
 {return yytext[0];}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 37 "lexer.l"
+#line 45 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 832 "lexer.cpp"
+#line 837 "lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1833,6 +1838,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 37 "lexer.l"
+#line 45 "lexer.l"
 
 //STD:string(yytext,yyleng) - stworz string z yytext i wez z niego yyleng znakow. Bez yyleng tez dziala

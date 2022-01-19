@@ -36,19 +36,33 @@ standard_type: T_INTEGER {$$ = integer;}
 
 
 
-compound_statement: T_BEGIN statement_list T_END 
+compound_statement: T_BEGIN statement_list T_END '.'
 
 statement_list: statement
               | statement_list ';' statement
 
-statement: ID T_ASSIGN expression {}
+statement: ID T_ASSIGN expression {
+                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
+                                  }
 
-expression: expression '+' expression {}
-          | expression '*' expression {}
-          | '-' expression {}
-          | '(' expression ')' {}
-          | ID {} //zawiera miejsce w tablicy symboli
-          | NUM {} //tutaj tez bedzie chyba
+expression: expression '+' expression {
+                                      int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
+                                      $$ = newtemp;
+                                      }
+          | expression '*' expression {
+                                      int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
+                                      $$ = newtemp;
+                                      }
+          | '-' expression {
+                           int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
+                           $$ = newtemp;
+                           }
+          | '(' expression ')' {$$ = $2;}
+          | ID {$$ = $1;} //zawiera miejsce w tablicy symboli
+          | NUM {$$ = $1;} //tutaj tez bedzie chyba
 
 %%
 

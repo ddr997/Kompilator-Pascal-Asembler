@@ -66,24 +66,24 @@ statement_list: statement
 
 statement: ID T_ASSIGN expression {
                                   SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
-                                  gencode("mov.i", $3, $1, 0);
+                                  gencode("mov", $3, $1, 0, SYMTABLE.table[$1].type);
                                   }
           | T_WRITE '(' ID ')' {
-                                gencode("write.i", $3, 0, 0);
+                                gencode("write", $3, 0, 0, SYMTABLE.table[$1].type);
                                }
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
-                                      gencode("add.i", $1, $3, newtemp);
+                                      gencode("add", $1, $3, newtemp, SYMTABLE.table[newtemp].type);
                                       }
 
           | expression '-' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
-                                      gencode("sub.i", $1, $3, newtemp);
+                                      gencode("sub", $1, $3, newtemp, SYMTABLE.table[newtemp].type);
                                       }
 
           | expression T_MULOP expression{
@@ -92,21 +92,21 @@ expression: expression '+' expression {
                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
                                          $$ = newtemp;
-                                         gencode(operation, $1, $3, newtemp);
+                                         gencode(operation, $1, $3, newtemp, SYMTABLE.table[newtemp].type);
                                          }
                                          if (operation == "/" || operation == "div")
                                          {
                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
                                          $$ = newtemp;
-                                         gencode(operation, $1, $3, newtemp);
+                                         gencode(operation, $1, $3, newtemp, SYMTABLE.table[newtemp].type);
                                          }
                                          if (operation == "mod")
                                          {
                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                          SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
                                          $$ = newtemp;
-                                         gencode(operation, $1, $3, newtemp);
+                                         gencode(operation, $1, $3, newtemp, SYMTABLE.table[newtemp].type);
                                          }
                                          }
 
@@ -134,7 +134,7 @@ int main()
   yyparse();
 };
 
-void gencode(string operation, int i1, int i2, int i3)
+void gencode(string operation, int i1, int i2, int i3, (VarType) vartype)
 {
   string var1 = to_string(SYMTABLE.table[i1].address); //adresy w stringach
   string var2 = to_string(SYMTABLE.table[i2].address);
@@ -143,43 +143,58 @@ void gencode(string operation, int i1, int i2, int i3)
   if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
   if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
 
-  if(operation == "mov.i") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
+  string postfix;
+  if (vartype == integer)
   {
-    cout << "mov.i " << var1 << "," << var2 << endl;
+    postfix = ".i ";
+  }
+  if (vartype == real)
+  {
+    postfix = ".r ";
+  }
+  else
+  {
+    postfix = " ";
   }
 
-  if(operation == "add.i")
+
+  if(operation == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
   {
-    cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "mov" << postfix << var1 << "," << var2 << endl;
   }
 
-  if(operation == "sub.i"){
-    cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
+  if(operation == "add")
+  {
+    cout << "add" << postfix << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "sub"){
+    cout << "sub" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "*")
   {
-    cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "mul" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "/")
   {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "div" << postfix < var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "div")
   {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "div" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "mod")
   {
-    cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "mod" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "write.i")
+  if(operation == "write.")
   {
-    cout << "write.i " << var1 <<endl;
+    cout << "write" << postfix << var1 <<endl;
   }
 
   if(operation == "inttoreal")
@@ -195,7 +210,7 @@ void gencode(string operation, int i1, int i2, int i3)
 
 int check_type_integrity(int i1, int i2)
 {
-  if(SYMTABLE.table[i1].type != SYMTABLE.table[i2].type)
+  /* if(SYMTABLE.table[i1].type != SYMTABLE.table[i2].type)
   {
 
     int newtemp = SYMTABLE.insert_to_table("$t", temporary); //indeks
@@ -222,6 +237,6 @@ int check_type_integrity(int i1, int i2)
   else
   {
     return i2;
-  }
+  } */
   return -1;
 }

@@ -4,23 +4,24 @@ Symtable::Symtable(){}
 
 int Symtable::insert_to_table(string s, Input_type t)
 {   
-    if(t == identifier)
-    {
+    switch(t){
+    case identifier: //swtich
         Record new_record;
         new_record.name = s;
         new_record.address = 0;
         table.push_back(new_record);
         return table.size() - 1;
-    }
-    if(t == number)
-    {
+        break;
+
+    case number:
         Record new_record;
         new_record.name = s;
         new_record.value = stoi(s);
         table.push_back(new_record);
         return table.size() - 1;
-    }
-    if(t == temporary){
+        break;
+
+    case temporary:
         Record new_record;
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
@@ -29,6 +30,7 @@ int Symtable::insert_to_table(string s, Input_type t)
         new_record.type = (VarType)integer;
         table.push_back(new_record);
         return table.size() - 1;
+        break;
     }
     return -1;
 }

@@ -23,8 +23,8 @@ integer	        {return T_INTEGER;}
 real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
 
-[\/\*]|(div)|(mod) {
-                   operation = yytext;
+[\/\*]|(div)|(mod) { //oddzielnie operacje i do atrybutu
+                   yylval = stoi(yytext);
                    return T_MULOP;
                    }
 

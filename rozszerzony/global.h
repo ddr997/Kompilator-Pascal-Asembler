@@ -8,7 +8,7 @@ extern string operation;
 int yylex();
 int check_type_integrity(int, int);
 void yyerror(char const *);
-void gencode(string, int, int, int);
+void gencode(string, int, int, int, VarType);
 enum VarType {none=0, integer=1, real=2};
 enum Input_type {identifier, number, temporary};
 struct Record{

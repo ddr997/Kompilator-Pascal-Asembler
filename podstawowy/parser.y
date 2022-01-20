@@ -29,7 +29,7 @@ program: T_PROGRAM ID '(' program_identifier_list ')' ';'
 
 program_identifier_list: ID | program_identifier_list ',' ID
 
-identifier_list: ID {id_vector.push_back($1);} //niesie 
+identifier_list: ID {id_vector.push_back($1);}
                | identifier_list ',' ID {id_vector.push_back($3);}
 
 declarations: declarations T_VAR identifier_list ':' type ';' {
@@ -38,14 +38,11 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                                 //printf("%d , %d\n", id_vector[i], i);
                                                                 SYMTABLE.table[id_vector[i]].type = (VarType)$5;
                                                                 SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_address;
-                                                                if($5 == integer)
-                                                                {
-                                                                  SYMTABLE.next_address += 4;
-                                                                }
+                                                                SYMTABLE.next_address += 4;
                                                               }
                                                               id_vector.clear();
                                                               }
-            |
+            | /* empty */
 
 type: standard_type {$$ = $1;}
 
@@ -83,26 +80,26 @@ expression: expression '+' expression {
                                       }
 
           | expression T_MULOP expression{
-                                         if(operation == "*")
+                                         if($2 == "*")
                                          {
-                                         int newtemp = SYMTABLE.insert_to_table("$t", temporary);
-                                         SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
-                                         $$ = newtemp;
-                                         gencode(operation, $1, $3, newtemp);
+                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
+                                          $$ = newtemp;
+                                          gencode(operation, $1, $3, newtemp);
                                          }
-                                         if (operation == "/" || operation == "div")
+                                         if ($2 == "/" || $2 == "div")
                                          {
-                                         int newtemp = SYMTABLE.insert_to_table("$t", temporary);
-                                         SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
-                                         $$ = newtemp;
-                                         gencode(operation, $1, $3, newtemp);
+                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
+                                          $$ = newtemp;
+                                          gencode(operation, $1, $3, newtemp);
                                          }
-                                         if (operation == "mod")
+                                         if ($2 == "mod")
                                          {
-                                         int newtemp = SYMTABLE.insert_to_table("$t", temporary);
-                                         SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
-                                         $$ = newtemp;
-                                         gencode(operation, $1, $3, newtemp);
+                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                          SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
+                                          $$ = newtemp;
+                                          gencode(operation, $1, $3, newtemp);
                                          }
                                          }
 
@@ -113,8 +110,8 @@ expression: expression '+' expression {
                            }
 
           | '(' expression ')' {$$ = $2;}
-          | ID {$$ = $1;} //zawiera miejsce w tablicy symboli
-          | NUM {$$ = $1;} //tutaj tez bedzie chyba
+          | ID {$$ = $1;}
+          | NUM {$$ = $1;}
 
 %%
 

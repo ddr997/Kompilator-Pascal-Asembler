@@ -9,7 +9,7 @@ int yylex();
 void yyerror(char const *);
 void gencode(string, int, int, int);
 enum VarType {none=0, integer=1, real=2};
-enum Input_type {identifier, number, temporary};
+class enum Input_type {it_identifier, number, temporary}; //w klasie bardziej orientacyjnie
 struct Record{
     VarType type = none;
     string name;

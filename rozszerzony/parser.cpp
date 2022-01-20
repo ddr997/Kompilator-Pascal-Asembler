@@ -1394,7 +1394,7 @@ yyreduce:
 #line 67 "parser.y"
                                   {
                                   SYMTABLE.table[yyvsp[-2]].value = SYMTABLE.table[yyvsp[0]].value;
-                                  gencode("mov.i", yyvsp[0], yyvsp[-2], 0);
+                                  gencode("mov", yyvsp[0], yyvsp[-2], 0, SYMTABLE.table[yyvsp[-2]].type);
                                   }
 #line 1400 "parser.cpp"
     break;
@@ -1402,7 +1402,7 @@ yyreduce:
   case 17:
 #line 71 "parser.y"
                                {
-                                gencode("write.i", yyvsp[-1], 0, 0);
+                                gencode("write", yyvsp[-1], 0, 0, SYMTABLE.table[yyvsp[-3]].type);
                                }
 #line 1408 "parser.cpp"
     break;
@@ -1413,7 +1413,7 @@ yyreduce:
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value + SYMTABLE.table[yyvsp[0]].value;
                                       yyval = newtemp;
-                                      gencode("add.i", yyvsp[-2], yyvsp[0], newtemp);
+                                      gencode("add", yyvsp[-2], yyvsp[0], newtemp, SYMTABLE.table[newtemp].type);
                                       }
 #line 1419 "parser.cpp"
     break;
@@ -1424,7 +1424,7 @@ yyreduce:
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value - SYMTABLE.table[yyvsp[0]].value;
                                       yyval = newtemp;
-                                      gencode("sub.i", yyvsp[-2], yyvsp[0], newtemp);
+                                      gencode("sub", yyvsp[-2], yyvsp[0], newtemp, SYMTABLE.table[newtemp].type);
                                       }
 #line 1430 "parser.cpp"
     break;
@@ -1437,21 +1437,21 @@ yyreduce:
                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value * SYMTABLE.table[yyvsp[0]].value;
                                          yyval = newtemp;
-                                         gencode(operation, yyvsp[-2], yyvsp[0], newtemp);
+                                         gencode(operation, yyvsp[-2], yyvsp[0], newtemp, SYMTABLE.table[newtemp].type);
                                          }
                                          if (operation == "/" || operation == "div")
                                          {
                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value / SYMTABLE.table[yyvsp[0]].value;
                                          yyval = newtemp;
-                                         gencode(operation, yyvsp[-2], yyvsp[0], newtemp);
+                                         gencode(operation, yyvsp[-2], yyvsp[0], newtemp, SYMTABLE.table[newtemp].type);
                                          }
                                          if (operation == "mod")
                                          {
                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
                                          SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[yyvsp[-2]].value % (int) SYMTABLE.table[yyvsp[0]].value;
                                          yyval = newtemp;
-                                         gencode(operation, yyvsp[-2], yyvsp[0], newtemp);
+                                         gencode(operation, yyvsp[-2], yyvsp[0], newtemp, SYMTABLE.table[newtemp].type);
                                          }
                                          }
 #line 1458 "parser.cpp"
@@ -1733,7 +1733,7 @@ int main()
   yyparse();
 };
 
-void gencode(string operation, int i1, int i2, int i3)
+void gencode(string operation, int i1, int i2, int i3, (VarType) vartype)
 {
   string var1 = to_string(SYMTABLE.table[i1].address); //adresy w stringach
   string var2 = to_string(SYMTABLE.table[i2].address);
@@ -1742,39 +1742,58 @@ void gencode(string operation, int i1, int i2, int i3)
   if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
   if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
 
-  if(operation == "mov.i") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
+  string postfix;
+  if (vartype == integer)
   {
-    cout << "mov.i " << var1 << "," << var2 << endl;
+    postfix = ".i ";
+  }
+  if (vartype == real)
+  {
+    postfix = ".r ";
+  }
+  else
+  {
+    postfix = " ";
   }
 
-  if(operation == "add.i")
+
+  if(operation == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
   {
-    cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "mov" << postfix << var1 << "," << var2 << endl;
+  }
+
+  if(operation == "add")
+  {
+    cout << "add" << postfix << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "sub"){
+    cout << "sub" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "*")
   {
-    cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "mul" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "/")
   {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "div" << postfix < var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "div")
   {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "div" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "mod")
   {
-    cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
+    cout << "mod" << postfix << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "write.i")
+  if(operation == "write.")
   {
-    cout << "write.i " << var1 <<endl;
+    cout << "write" << postfix << var1 <<endl;
   }
 
   if(operation == "inttoreal")
@@ -1792,6 +1811,7 @@ int check_type_integrity(int i1, int i2)
 {
   /* if(SYMTABLE.table[i1].type != SYMTABLE.table[i2].type)
   {
+
     int newtemp = SYMTABLE.insert_to_table("$t", temporary); //indeks
     if ( SYMTABLE.table[i1].type = (VarType)integer )
     {
@@ -1811,6 +1831,7 @@ int check_type_integrity(int i1, int i2)
       SYMTABLE.next_address += 8;
       return newtemp;
     }
+
   }
   else
   {

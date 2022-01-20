@@ -42,6 +42,10 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                                 {
                                                                   SYMTABLE.next_address += 4;
                                                                 }
+                                                                if($5 == real)
+                                                                {
+                                                                  SYMTABLE.next_address += 8;
+                                                                }
                                                               }
                                                               id_vector.clear();
                                                               }
@@ -61,8 +65,9 @@ statement_list: statement
               | statement_list ';' statement
 
 statement: ID T_ASSIGN expression {
-                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
-                                  gencode("mov.i", $3, $1, 0);
+                                  int check = check_type_integrity($1, $3);
+                                  SYMTABLE.table[$1].value = SYMTABLE.table[check].value;
+                                  gencode("mov.i", check, $1, 0);
                                   }
           | T_WRITE '(' ID ')' {
                                 gencode("write.i", $3, 0, 0);
@@ -70,7 +75,8 @@ statement: ID T_ASSIGN expression {
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
+                                      int check = check_type_integrity($1,$3);
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[check].value;
                                       $$ = newtemp;
                                       gencode("add.i", $1, $3, newtemp);
                                       }
@@ -173,4 +179,45 @@ void gencode(string operation, int i1, int i2, int i3)
   {
     cout << "write.i " << var1 <<endl;
   }
+
+  if(operation == "inttoreal")
+  {
+    cout << "inttoreal " << to_string(SYMTABLE.table[i1].address) << "," << var2 << endl;
+  }
+
+  if(operation == "realtoint")
+  {
+    cout << "realtoint " << to_string(SYMTABLE.table[i1].address) << "," << var2 << endl;
+  }
+}
+
+int check_type_integrity(int i1, int i2)
+{
+  if(SYMTABLE.table[i1].type != SYMTABLE.table[i2].type)
+  {
+    int newtemp = SYMTABLE.insert_to_table("$t", temporary); //indeks
+    if ( SYMTABLE.table[i1].type = (VarType)integer )
+    {
+      SYMTABLE.table[newtemp].value = static_cast<int>(SYMTABLE.table[i2].value); //wartosc
+      SYMTABLE.table[newtemp].type = (VarType) integer; //typ
+      SYMTABLE.table[newtemp].address = SYMTABLE.next_address; //adres
+      gencode("realtoint", i2, newtemp, 0); //indeks, indeks
+      SYMTABLE.next_address += 4;
+      return newtemp; //indeks
+    }
+    if ( SYMTABLE.table[i1].type = (VarType)real )
+    {
+      SYMTABLE.table[newtemp].value = static_cast<float>(SYMTABLE.table[i2].value);
+      SYMTABLE.table[newtemp].type = (VarType) real;
+      SYMTABLE.table[newtemp].address = SYMTABLE.next_address;
+      gencode("inttoreal", i2, newtemp, 0);
+      SYMTABLE.next_address += 8;
+      return newtemp;
+    }
+  }
+  else
+  {
+    return i2;
+  }
+  return -1;
 }

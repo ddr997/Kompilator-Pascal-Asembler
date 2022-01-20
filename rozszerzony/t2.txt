@@ -1,0 +1,5 @@
+program exmp(input, output);
+var x,y: integer;
+begin
+    x := 4.5
+end.

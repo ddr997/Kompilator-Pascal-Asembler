@@ -65,9 +65,8 @@ statement_list: statement
               | statement_list ';' statement
 
 statement: ID T_ASSIGN expression {
-                                  int check = check_type_integrity($1, $3);
-                                  SYMTABLE.table[$1].value = SYMTABLE.table[check].value;
-                                  gencode("mov.i", check, $1, 0);
+                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
+                                  gencode("mov.i", $3, $1, 0);
                                   }
           | T_WRITE '(' ID ')' {
                                 gencode("write.i", $3, 0, 0);
@@ -75,8 +74,7 @@ statement: ID T_ASSIGN expression {
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", temporary);
-                                      int check = check_type_integrity($1,$3);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[check].value;
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("add.i", $1, $3, newtemp);
                                       }
@@ -155,6 +153,10 @@ void gencode(string operation, int i1, int i2, int i3)
     cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
+  if(operation == "sub.i"){
+    cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
   if(operation == "*")
   {
     cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
@@ -195,6 +197,7 @@ int check_type_integrity(int i1, int i2)
 {
   if(SYMTABLE.table[i1].type != SYMTABLE.table[i2].type)
   {
+
     int newtemp = SYMTABLE.insert_to_table("$t", temporary); //indeks
     if ( SYMTABLE.table[i1].type = (VarType)integer )
     {
@@ -214,6 +217,7 @@ int check_type_integrity(int i1, int i2)
       SYMTABLE.next_address += 8;
       return newtemp;
     }
+
   }
   else
   {

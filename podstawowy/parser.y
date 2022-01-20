@@ -149,6 +149,10 @@ void gencode(string operation, int i1, int i2, int i3)
     cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
+  if(operation == "sub.i"){
+    cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
   if(operation == "*")
   {
     cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;

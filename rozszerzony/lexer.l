@@ -36,8 +36,6 @@ real	        {return T_REAL;}
                     yylval = SYMTABLE.insert_to_table(yytext, number);
                     SYMTABLE.table[yylval].value = stoi(yytext);
                     SYMTABLE.table[yylval].type = (VarType) integer;
-                    SYMTABLE.table[yylval].address = SYMTABLE.next_address;
-                    SYMTABLE.next_address += 4;
                 }
                 else{ yylval = check_if_exists; }
                 return NUM;
@@ -50,8 +48,6 @@ real	        {return T_REAL;}
                     yylval = SYMTABLE.insert_to_table(yytext, number);
                     SYMTABLE.table[yylval].value = stof(yytext);
                     SYMTABLE.table[yylval].type = (VarType) real;
-                    SYMTABLE.table[yylval].address = SYMTABLE.next_address;
-                    SYMTABLE.next_address += 8;
                  }
                  else{ yylval = check_if_exists; }
                  return NUM;

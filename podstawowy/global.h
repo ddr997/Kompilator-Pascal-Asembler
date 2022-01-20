@@ -6,14 +6,15 @@ using namespace std;
 
 extern string operation;
 int yylex();
+int check_type_integrity(int, int);
 void yyerror(char const *);
 void gencode(string, int, int, int);
-enum Variable_type {integer=1, real=2};
+enum VarType {none=0, integer=1, real=2};
 enum Input_type {identifier, number, temporary};
 struct Record{
-    Variable_type type_of_variable = integer;
+    VarType type = none;
     string name;
-    int value = 0;
+    float value = 0;
     int address = -1;
 };
 class Symtable{

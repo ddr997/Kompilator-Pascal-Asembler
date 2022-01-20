@@ -8,8 +8,7 @@ int Symtable::insert_to_table(string s, Input_type t)
     {
         Record new_record;
         new_record.name = s;
-        new_record.address = next_address;
-        next_address += 4;
+        new_record.address = 0;
         table.push_back(new_record);
         return table.size() - 1;
     }
@@ -25,8 +24,6 @@ int Symtable::insert_to_table(string s, Input_type t)
         Record new_record;
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
-        new_record.address = next_address;
-        next_address += 4;
         table.push_back(new_record);
         return table.size() - 1;
     }
@@ -54,7 +51,7 @@ void Symtable::print_table()
     cout << "\n" + string(30,'-') << endl;
     for(int i=0; i < (int)table.size(); i++)
     {
-        cout << "|" << table[i].name << "\t|" <<table[i].type_of_variable << "\t|" << table[i].value << "\t|" 
+        cout << "|" << table[i].name << "\t|" <<table[i].type << "\t|" << table[i].value << "\t|" 
         << table[i].address << endl;
     }
 }

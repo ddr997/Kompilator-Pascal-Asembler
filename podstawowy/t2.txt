@@ -1,6 +1,5 @@
 program exmp(input, output);
 var x,y: integer;
-var a,b,c: real;
 begin
-    x := 3
+    x := 4.5
 end.

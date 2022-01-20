@@ -24,6 +24,9 @@ int Symtable::insert_to_table(string s, Input_type t)
         Record new_record;
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
+        new_record.address = next_address;
+        next_address += 4;
+        new_record.type = (VarType)integer;
         table.push_back(new_record);
         return table.size() - 1;
     }

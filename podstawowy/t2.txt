@@ -1,5 +1,6 @@
 program exmp(input, output);
 var x,y: integer;
 begin
-    x := 4.5
+    x := 7 mod 4 ;
+    y := 3 mod x + 2
 end.

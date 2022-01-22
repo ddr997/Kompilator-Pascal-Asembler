@@ -68,14 +68,15 @@
 /* First part of user prologue.  */
 #line 1 "parser.y"
 
+#include <stdio.h>
+#include <ctype.h>
 #include "global.h"
 #define YYERROR_VERBOSE 1
-Symtable SYMTABLE;
-extern string operation;
-vector <int> id_vector;
 
+int yylex();
+void yyerror(const char *s);
 
-#line 79 "parser.cpp"
+#line 80 "parser.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -108,8 +109,8 @@ vector <int> id_vector;
 
 /* Use api.header.include to #include this header
    instead of duplicating it here.  */
-#ifndef YY_YY_PARSER_HPP_INCLUDED
-# define YY_YY_PARSER_HPP_INCLUDED
+#ifndef YY_YY_PARSER_H_INCLUDED
+# define YY_YY_PARSER_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -123,17 +124,11 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    T_PROGRAM = 258,
-    T_VAR = 259,
-    T_BEGIN = 260,
-    T_END = 261,
-    T_WRITE = 262,
-    T_ASSIGN = 263,
-    T_INTEGER = 264,
-    T_REAL = 265,
-    T_MULOP = 266,
-    ID = 267,
-    NUM = 268
+    NUM = 258,
+    DIV = 259,
+    MOD = 260,
+    ID = 261,
+    DONE = 262
   };
 #endif
 
@@ -149,7 +144,7 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_PARSER_HPP_INCLUDED  */
+#endif /* !YY_YY_PARSER_H_INCLUDED  */
 
 
 
@@ -453,21 +448,21 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  5
+#define YYFINAL  10
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   47
+#define YYLAST   23
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  22
+#define YYNTOKENS  15
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  12
+#define YYNNTS  6
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  24
+#define YYNRULES  15
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  53
+#define YYNSTATES  27
 
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   268
+#define YYMAXUTOK   262
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -483,8 +478,8 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      16,    17,     2,    14,    19,    15,    21,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    20,    18,
+      13,    14,    11,     9,     2,    10,     2,    12,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     8,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -505,16 +500,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11,    12,    13
+       5,     6,     7
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    25,    25,    27,    31,    31,    33,    34,    36,    46,
-      48,    50,    51,    56,    58,    59,    61,    65,    69,    76,
-      83,   107,   114,   115,   116
+       0,    15,    15,    19,    20,    24,    25,    26,    30,    31,
+      32,    33,    34,    38,    39,    40
 };
 #endif
 
@@ -523,12 +517,9 @@ static const yytype_int8 yyrline[] =
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "T_PROGRAM", "T_VAR", "T_BEGIN", "T_END",
-  "T_WRITE", "T_ASSIGN", "T_INTEGER", "T_REAL", "T_MULOP", "ID", "NUM",
-  "'+'", "'-'", "'('", "')'", "';'", "','", "':'", "'.'", "$accept",
-  "start", "program", "program_identifier_list", "identifier_list",
-  "declarations", "type", "standard_type", "compound_statement",
-  "statement_list", "statement", "expression", YY_NULLPTR
+  "$end", "error", "$undefined", "NUM", "DIV", "MOD", "ID", "DONE", "';'",
+  "'+'", "'-'", "'*'", "'/'", "'('", "')'", "$accept", "start", "list",
+  "expr", "term", "factor", YY_NULLPTR
 };
 #endif
 
@@ -537,13 +528,12 @@ static const char *const yytname[] =
    (internal) symbol number NUM (which must be that of a token).  */
 static const yytype_int16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267,   268,    43,    45,    40,    41,    59,    44,
-      58,    46
+       0,   256,   257,   258,   259,   260,   261,   262,    59,    43,
+      45,    42,    47,    40,    41
 };
 # endif
 
-#define YYPACT_NINF (-34)
+#define YYPACT_NINF (-9)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -557,12 +547,9 @@ static const yytype_int16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      21,    17,    30,   -34,    15,   -34,    20,   -34,    -9,    16,
-      23,   -34,   -34,    -3,    24,     4,   -34,   -34,     6,    22,
-      25,    -6,   -34,    27,    18,    28,     5,    26,     4,   -34,
-     -34,   -34,    19,   -34,    29,   -34,   -34,     5,     5,     8,
-     -34,   -34,   -34,   -34,    31,    -8,     5,     5,     5,   -34,
-     -34,    31,    31
+      -3,    -9,    -9,    -3,    19,    13,    -1,     0,    -9,    -8,
+      -9,    -9,    -3,    -3,    -3,    -3,    -3,    -3,    -3,    -9,
+      -9,     0,     0,    -9,    -9,    -9,    -9
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -570,26 +557,21 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     2,     0,     1,     0,     4,     0,     0,
-       0,     9,     5,     0,     0,     0,     3,     6,     0,     0,
-       0,     0,    14,     0,     0,     0,     0,     0,     0,     7,
-      11,    12,     0,    10,     0,    23,    24,     0,     0,    16,
-      13,    15,     8,    17,    21,     0,     0,     0,     0,    22,
-      20,    18,    19
+       4,    15,    14,     0,     0,     0,     0,     7,    12,     0,
+       1,     2,     4,     0,     0,     0,     0,     0,     0,    13,
+       3,     5,     6,    10,    11,     8,     9
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -34,   -34,   -34,   -34,   -34,   -34,   -34,   -34,   -34,   -34,
-      13,   -33
+      -9,    -9,     9,    20,     4,    -2
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     3,     8,    18,    13,    32,    33,    16,    21,
-      22,    39
+      -1,     4,     5,     6,     7,     8
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -597,48 +579,39 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      27,    14,    15,    46,    44,    45,    47,    48,     9,    49,
-      10,    19,    28,    50,    51,    52,    20,    35,    36,    46,
-      37,    38,    47,    48,     1,    23,    24,    30,    31,     4,
-       5,     6,     7,    26,    11,    12,    17,    42,    25,    29,
-      34,    41,    46,     0,     0,     0,    43,    40
+       1,    13,    14,     2,    15,    16,    19,    12,    13,    14,
+       3,    17,    18,    23,    24,    25,    26,    21,    22,    10,
+      11,    20,     0,     9
 };
 
 static const yytype_int8 yycheck[] =
 {
-       6,     4,     5,    11,    37,    38,    14,    15,    17,    17,
-      19,     7,    18,    46,    47,    48,    12,    12,    13,    11,
-      15,    16,    14,    15,     3,    19,    20,     9,    10,    12,
-       0,    16,    12,     8,    18,    12,    12,    18,    16,    12,
-      12,    28,    11,    -1,    -1,    -1,    17,    21
+       3,     9,    10,     6,     4,     5,    14,     8,     9,    10,
+      13,    11,    12,    15,    16,    17,    18,    13,    14,     0,
+       7,    12,    -1,     3
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,    23,    24,    12,     0,    16,    12,    25,    17,
-      19,    18,    12,    27,     4,     5,    30,    12,    26,     7,
-      12,    31,    32,    19,    20,    16,     8,     6,    18,    12,
-       9,    10,    28,    29,    12,    12,    13,    15,    16,    33,
-      21,    32,    18,    17,    33,    33,    11,    14,    15,    17,
-      33,    33,    33
+       0,     3,     6,    13,    16,    17,    18,    19,    20,    18,
+       0,     7,     8,     9,    10,     4,     5,    11,    12,    14,
+      17,    19,    19,    20,    20,    20,    20
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    22,    23,    24,    25,    25,    26,    26,    27,    27,
-      28,    29,    29,    30,    31,    31,    32,    32,    33,    33,
-      33,    33,    33,    33,    33
+       0,    15,    16,    17,    17,    18,    18,    18,    19,    19,
+      19,    19,    19,    20,    20,    20
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     1,     8,     1,     3,     1,     3,     6,     0,
-       1,     1,     1,     4,     1,     3,     3,     4,     3,     3,
-       3,     2,     3,     1,     1
+       0,     2,     2,     3,     0,     3,     3,     1,     3,     3,
+       3,     3,     1,     3,     1,     1
 };
 
 
@@ -1333,155 +1306,56 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2:
-#line 25 "parser.y"
-               { SYMTABLE.print_table(); }
-#line 1340 "parser.cpp"
+  case 5:
+#line 24 "parser.y"
+                        { emit('+', NONE); }
+#line 1313 "parser.c"
     break;
 
   case 6:
-#line 33 "parser.y"
-                    {id_vector.push_back(yyvsp[0]);}
-#line 1346 "parser.cpp"
-    break;
-
-  case 7:
-#line 34 "parser.y"
-                                        {id_vector.push_back(yyvsp[0]);}
-#line 1352 "parser.cpp"
+#line 25 "parser.y"
+                        { emit('-', NONE); }
+#line 1319 "parser.c"
     break;
 
   case 8:
-#line 36 "parser.y"
-                                                              {
-                                                              for(int i=0; i< (int) id_vector.size(); i++)
-                                                              {
-                                                                //printf("%d , %d\n", id_vector[i], i);
-                                                                SYMTABLE.table[id_vector[i]].type = (VarType)yyvsp[-1];
-                                                                SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_address;
-                                                                SYMTABLE.next_address += 4;
-                                                              }
-                                                              id_vector.clear();
-                                                              }
-#line 1367 "parser.cpp"
+#line 30 "parser.y"
+                        { emit('*', NONE); }
+#line 1325 "parser.c"
+    break;
+
+  case 9:
+#line 31 "parser.y"
+                        { emit('/', NONE); }
+#line 1331 "parser.c"
     break;
 
   case 10:
-#line 48 "parser.y"
-                    {yyval = yyvsp[0];}
-#line 1373 "parser.cpp"
+#line 32 "parser.y"
+                        { emit(DIV, NONE); }
+#line 1337 "parser.c"
     break;
 
   case 11:
-#line 50 "parser.y"
-                         {yyval = (VarType)INTEGER;}
-#line 1379 "parser.cpp"
+#line 33 "parser.y"
+                        { emit(MOD, NONE); }
+#line 1343 "parser.c"
     break;
 
-  case 12:
-#line 51 "parser.y"
-                      {yyval = (VarType)REAL;}
-#line 1385 "parser.cpp"
+  case 14:
+#line 39 "parser.y"
+                        { emit(ID, yyvsp[0]); }
+#line 1349 "parser.c"
     break;
 
-  case 16:
-#line 61 "parser.y"
-                                  {
-                                  SYMTABLE.table[yyvsp[-2]].value = SYMTABLE.table[yyvsp[0]].value;
-                                  gencode("mov", yyvsp[0], yyvsp[-2], 0);
-                                  }
-#line 1394 "parser.cpp"
-    break;
-
-  case 17:
-#line 65 "parser.y"
-                               {
-                                gencode("write", yyvsp[-1], 0, 0);
-                               }
-#line 1402 "parser.cpp"
-    break;
-
-  case 18:
-#line 69 "parser.y"
-                                      {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value + SYMTABLE.table[yyvsp[0]].value;
-                                      yyval = newtemp;
-                                      gencode("add", yyvsp[-2], yyvsp[0], newtemp);
-                                      }
-#line 1413 "parser.cpp"
-    break;
-
-  case 19:
-#line 76 "parser.y"
-                                      {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value - SYMTABLE.table[yyvsp[0]].value;
-                                      yyval = newtemp;
-                                      gencode("sub", yyvsp[-2], yyvsp[0], newtemp);
-                                      }
-#line 1424 "parser.cpp"
-    break;
-
-  case 20:
-#line 83 "parser.y"
-                                         {
-                                         if(yyvsp[-1] == '*')
-                                         {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value * SYMTABLE.table[yyvsp[0]].value;
-                                          yyval = newtemp;
-                                          gencode("mul", yyvsp[-2], yyvsp[0], newtemp);
-                                         }
-                                         if (yyvsp[-1] == '/')
-                                         {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[-2]].value / SYMTABLE.table[yyvsp[0]].value;
-                                          yyval = newtemp;
-                                          gencode("div", yyvsp[-2], yyvsp[0], newtemp);
-                                         }
-                                         if (yyvsp[-1] == 'm')
-                                         {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[yyvsp[-2]].value % (int) SYMTABLE.table[yyvsp[0]].value;
-                                          yyval = newtemp;
-                                          gencode("mod", yyvsp[-2], yyvsp[0], newtemp);
-                                         }
-                                         }
-#line 1452 "parser.cpp"
-    break;
-
-  case 21:
-#line 107 "parser.y"
-                           {
-                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                           SYMTABLE.table[newtemp].value = SYMTABLE.table[yyvsp[0]].value * (-1);
-                           yyval = newtemp;
-                           gencode("negation", 0, yyvsp[0], newtemp);
-                           }
-#line 1463 "parser.cpp"
-    break;
-
-  case 22:
-#line 114 "parser.y"
-                               {yyval = yyvsp[-1];}
-#line 1469 "parser.cpp"
-    break;
-
-  case 23:
-#line 115 "parser.y"
-               {yyval = yyvsp[0];}
-#line 1475 "parser.cpp"
-    break;
-
-  case 24:
-#line 116 "parser.y"
-                {yyval = yyvsp[0];}
-#line 1481 "parser.cpp"
+  case 15:
+#line 40 "parser.y"
+                        { emit(NUM, yyvsp[0]); }
+#line 1355 "parser.c"
     break;
 
 
-#line 1485 "parser.cpp"
+#line 1359 "parser.c"
 
       default: break;
     }
@@ -1713,73 +1587,12 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 118 "parser.y"
+#line 42 "parser.y"
 
-
-
-
-void yyerror(char const *s)
-{
-  printf("%s\n",s);
-};
-
-int main()
-{
-  atexit(destroy);
-  yyparse();
-  exit(0);
-};
-
-void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w tablicy symboli
-{
-  string var1 = to_string(SYMTABLE.table[i1].address); //adresy w stringach
-  string var2 = to_string(SYMTABLE.table[i2].address);
-  string var3 = to_string(SYMTABLE.table[i3].address);
-  if (isdigit(SYMTABLE.table[i1].name[0])){ var1 = "#" + SYMTABLE.table[i1].name; } //przypisywanie posrednie, bez adresu
-  if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
-  if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
-
-  if(operation == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
-  {
-    cout << "mov.i " << var1 << "," << var2 << endl;
-  }
-
-  if(operation == "add")
-  {
-    cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "sub"){
-    cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "mul")
-  {
-    cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "div")
-  {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "mod")
-  {
-    cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "negation")
-  {
-    cout << "sub.i " << "#0" << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "write")
-  {
-    cout << "write.i " << var1 <<endl;
-  }
+void parse(){
+    yyparse();
 }
 
-void destroy()
-{
-  yylex_destroy();
+void yyerror (const char *s) {
+	error((char *)s);
 }

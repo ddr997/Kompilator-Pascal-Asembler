@@ -4,6 +4,7 @@
 Symtable SYMTABLE;
 extern string operation;
 vector <int> id_vector;
+
 %}
 
 %token T_PROGRAM
@@ -46,8 +47,8 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
 
 type: standard_type {$$ = $1;}
 
-standard_type: T_INTEGER {$$ = INTEGER;}
-             | T_REAL {$$ = REAL;}
+standard_type: T_INTEGER {$$ = (VarType)INTEGER;}
+             | T_REAL {$$ = (VarType)REAL;}
 
 
 
@@ -59,24 +60,24 @@ statement_list: statement
 
 statement: ID T_ASSIGN expression {
                                   SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
-                                  gencode("mov.i", $3, $1, 0);
+                                  gencode("mov", $3, $1, 0);
                                   }
           | T_WRITE '(' ID ')' {
-                                gencode("write.i", $3, 0, 0);
+                                gencode("write", $3, 0, 0);
                                }
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
-                                      gencode("add.i", $1, $3, newtemp);
+                                      gencode("add", $1, $3, newtemp);
                                       }
 
           | expression '-' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
-                                      gencode("sub.i", $1, $3, newtemp);
+                                      gencode("sub", $1, $3, newtemp);
                                       }
 
           | expression T_MULOP expression{
@@ -85,21 +86,21 @@ expression: expression '+' expression {
                                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
                                           $$ = newtemp;
-                                          gencode("mul.i", $1, $3, newtemp);
+                                          gencode("mul", $1, $3, newtemp);
                                          }
                                          if ($2 == '/')
                                          {
                                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
                                           $$ = newtemp;
-                                          gencode("div.i", $1, $3, newtemp);
+                                          gencode("div", $1, $3, newtemp);
                                          }
                                          if ($2 == 'm')
                                          {
                                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                           SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
                                           $$ = newtemp;
-                                          gencode("mod.i", $1, $3, newtemp);
+                                          gencode("mod", $1, $3, newtemp);
                                          }
                                          }
 
@@ -125,7 +126,9 @@ void yyerror(char const *s)
 
 int main()
 {
+  atexit(destroy);
   yyparse();
+  exit(0);
 };
 
 void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w tablicy symboli
@@ -137,28 +140,23 @@ void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w ta
   if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
   if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
 
-  if(operation == "mov.i") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
+  if(operation == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
   {
     cout << "mov.i " << var1 << "," << var2 << endl;
   }
 
-  if(operation == "add.i")
+  if(operation == "add")
   {
     cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "sub.i"){
+  if(operation == "sub"){
     cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "*")
+  if(operation == "mul")
   {
     cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(operation == "/")
-  {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "div")
@@ -176,8 +174,13 @@ void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w ta
     cout << "sub.i " << "#0" << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "write.i")
+  if(operation == "write")
   {
     cout << "write.i " << var1 <<endl;
   }
+}
+
+void destroy()
+{
+  yylex_destroy();
 }

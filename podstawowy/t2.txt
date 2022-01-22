@@ -1,7 +1,7 @@
 program exmp(input, output);
 var x,y: integer;
 begin
-    x := 5 - 2;
-    y := -x;
-    write(x)
+    x := 14 div 3 mod (3 + 5);
+    y := x * 5;
+    write(y)
 end.

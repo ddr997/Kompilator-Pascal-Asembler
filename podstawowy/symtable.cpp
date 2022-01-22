@@ -52,9 +52,6 @@ void Symtable::print_table()
         cout << "|" << column_names[i] << "\t";
     }
     cout << "\n" + string(30,'-') << endl;
-
-
-
     for(int i=0; i < (int)table.size(); i++)
     {
         cout << "|" << table[i].name << "\t|" << table[i].type << "\t|" << table[i].value << "\t|" 

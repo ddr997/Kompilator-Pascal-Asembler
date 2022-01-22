@@ -4,12 +4,13 @@
 #include <stdio.h>
 using namespace std;
 
-extern string operation;
+void destroy();
+int yylex_destroy();
 int yylex();
 void yyerror(char const *);
 void gencode(string, int, int, int);
 enum VarType {NONE, INTEGER, REAL};
-enum class Input_type {IDENTIFIER, NUMBER, TEMPORARY}; //w klasie bardziej orientacyjnie
+enum class Input_type {IDENTIFIER = 0, NUMBER = 1, TEMPORARY = 2}; //w klasie bardziej orientacyjnie
 struct Record{
     VarType type = VarType::NONE;
     string name;

@@ -2,32 +2,30 @@
 
 Symtable::Symtable(){} 
 
-int Symtable::insert_to_table(string s, Input_type t)
+int Symtable::insert_to_table(string s, Input_type IT)
 {   
-    switch(t){
-    case identifier: //swtich
-        Record new_record;
+    Record new_record;
+    switch(IT){
+    case Input_type::IDENTIFIER: //swtich
         new_record.name = s;
         new_record.address = 0;
         table.push_back(new_record);
         return table.size() - 1;
         break;
 
-    case number:
-        Record new_record;
+    case Input_type::NUMBER:
         new_record.name = s;
         new_record.value = stoi(s);
         table.push_back(new_record);
         return table.size() - 1;
         break;
 
-    case temporary:
-        Record new_record;
+    case Input_type::TEMPORARY:
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
         new_record.address = next_address;
         next_address += 4;
-        new_record.type = (VarType)integer;
+        new_record.type = (VarType)INTEGER;
         table.push_back(new_record);
         return table.size() - 1;
         break;
@@ -54,9 +52,12 @@ void Symtable::print_table()
         cout << "|" << column_names[i] << "\t";
     }
     cout << "\n" + string(30,'-') << endl;
+
+
+
     for(int i=0; i < (int)table.size(); i++)
     {
-        cout << "|" << table[i].name << "\t|" <<table[i].type << "\t|" << table[i].value << "\t|" 
+        cout << "|" << table[i].name << "\t|" << table[i].type << "\t|" << table[i].value << "\t|" 
         << table[i].address << endl;
     }
 }

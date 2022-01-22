@@ -46,8 +46,8 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
 
 type: standard_type {$$ = $1;}
 
-standard_type: T_INTEGER {$$ = integer;}
-             | T_REAL {$$ = real;}
+standard_type: T_INTEGER {$$ = INTEGER;}
+             | T_REAL {$$ = REAL;}
 
 
 
@@ -66,47 +66,48 @@ statement: ID T_ASSIGN expression {
                                }
 
 expression: expression '+' expression {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                      int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("add.i", $1, $3, newtemp);
                                       }
 
           | expression '-' expression {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                      int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("sub.i", $1, $3, newtemp);
                                       }
 
           | expression T_MULOP expression{
-                                         if($2 == "*")
+                                         if($2 == '*')
                                          {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
                                           $$ = newtemp;
-                                          gencode(operation, $1, $3, newtemp);
+                                          gencode("mul.i", $1, $3, newtemp);
                                          }
-                                         if ($2 == "/" || $2 == "div")
+                                         if ($2 == '/')
                                          {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
                                           $$ = newtemp;
-                                          gencode(operation, $1, $3, newtemp);
+                                          gencode("div.i", $1, $3, newtemp);
                                          }
-                                         if ($2 == "mod")
+                                         if ($2 == 'm')
                                          {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                                           SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
                                           $$ = newtemp;
-                                          gencode(operation, $1, $3, newtemp);
+                                          gencode("mod.i", $1, $3, newtemp);
                                          }
                                          }
 
           | '-' expression {
-                           int newtemp = SYMTABLE.insert_to_table("$t", temporary);
+                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
                            SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            $$ = newtemp;
+                           gencode("negation", 0, $2, newtemp);
                            }
 
           | '(' expression ')' {$$ = $2;}
@@ -127,7 +128,7 @@ int main()
   yyparse();
 };
 
-void gencode(string operation, int i1, int i2, int i3)
+void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w tablicy symboli
 {
   string var1 = to_string(SYMTABLE.table[i1].address); //adresy w stringach
   string var2 = to_string(SYMTABLE.table[i2].address);
@@ -168,6 +169,11 @@ void gencode(string operation, int i1, int i2, int i3)
   if(operation == "mod")
   {
     cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
+  }
+
+  if(operation == "negation")
+  {
+    cout << "sub.i " << "#0" << "," << var2 << "," << var3 << endl;
   }
 
   if(operation == "write.i")

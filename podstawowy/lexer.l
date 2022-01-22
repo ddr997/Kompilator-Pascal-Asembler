@@ -2,7 +2,6 @@
 #include "global.h"
 #include "parser.hpp"
 extern Symtable SYMTABLE;
-string operation;
 %}
 
 %option noyywrap
@@ -22,19 +21,29 @@ var             {return T_VAR;}
 integer	        {return T_INTEGER;}
 real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
+                   
+"/"|div         {
+                yylval = '/';
+                return T_MULOP;
+                }
 
-[\/\*]|(div)|(mod) { //oddzielnie operacje i do atrybutu
-                   yylval = stoi(yytext);
-                   return T_MULOP;
-                   }
+"*"             {
+                yylval = '*';
+                return T_MULOP;
+                }
+
+mod|"%"         {
+                yylval = 'm';
+                return T_MULOP;
+                }
 
 {NUM}           {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
                 {
-                    yylval = SYMTABLE.insert_to_table(yytext, number);
+                    yylval = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER);
                     SYMTABLE.table[yylval].value = stoi(yytext);
-                    SYMTABLE.table[yylval].type = (VarType) integer;
+                    SYMTABLE.table[yylval].type = VarType::INTEGER;
                 }
                 else{ yylval = check_if_exists; }
                 return NUM;
@@ -42,7 +51,10 @@ real	        {return T_REAL;}
 
 {ID}	        {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
-                if(check_if_exists < 0){ yylval = SYMTABLE.insert_to_table(yytext, identifier); }
+                if(check_if_exists < 0)
+                { 
+                    yylval = SYMTABLE.insert_to_table(yytext, Input_type::IDENTIFIER);
+                }
                 else{ yylval = check_if_exists; }
                 return ID;
                 }

@@ -8,10 +8,10 @@ extern string operation;
 int yylex();
 void yyerror(char const *);
 void gencode(string, int, int, int);
-enum VarType {none=0, integer=1, real=2};
-class enum Input_type {it_identifier, number, temporary}; //w klasie bardziej orientacyjnie
+enum VarType {NONE, INTEGER, REAL};
+enum class Input_type {IDENTIFIER, NUMBER, TEMPORARY}; //w klasie bardziej orientacyjnie
 struct Record{
-    VarType type = none;
+    VarType type = VarType::NONE;
     string name;
     int value = 0;
     int address = -1;

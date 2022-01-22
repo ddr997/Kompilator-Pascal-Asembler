@@ -817,7 +817,7 @@ case 10:
 YY_RULE_SETUP
 #line 25 "lexer.l"
 {
-                yylval = '/';
+                yylval.operation = '/';
                 return T_MULOP;
                 }
 	YY_BREAK
@@ -825,7 +825,7 @@ case 11:
 YY_RULE_SETUP
 #line 30 "lexer.l"
 {
-                yylval = '*';
+                yylval.operation = '*';
                 return T_MULOP;
                 }
 	YY_BREAK
@@ -833,7 +833,7 @@ case 12:
 YY_RULE_SETUP
 #line 35 "lexer.l"
 {
-                yylval = 'm';
+                yylval.operation = 'm';
                 return T_MULOP;
                 }
 	YY_BREAK
@@ -844,11 +844,11 @@ YY_RULE_SETUP
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
                 {
-                    yylval = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER);
-                    SYMTABLE.table[yylval].value = stoi(yytext);
-                    SYMTABLE.table[yylval].type = VarType::INTEGER;
+                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER);
+                    SYMTABLE.table[yylval.index].value = stoi(yytext);
+                    SYMTABLE.table[yylval.index].type = VarType::INTEGER;
                 }
-                else{ yylval = check_if_exists; }
+                else{ yylval.index = check_if_exists; }
                 return NUM;
                 }
 	YY_BREAK
@@ -859,9 +859,9 @@ YY_RULE_SETUP
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
                 { 
-                    yylval = SYMTABLE.insert_to_table(yytext, Input_type::IDENTIFIER);
+                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::IDENTIFIER);
                 }
-                else{ yylval = check_if_exists; }
+                else{ yylval.index = check_if_exists; }
                 return ID;
                 }
 	YY_BREAK

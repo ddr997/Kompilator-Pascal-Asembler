@@ -25,7 +25,7 @@ int Symtable::insert_to_table(string s, Input_type IT)
         next_temp += 1;
         new_record.address = next_address;
         next_address += 4;
-        new_record.type = (VarType)INTEGER;
+        new_record.type = VarType::INTEGER;
         table.push_back(new_record);
         return table.size() - 1;
         break;
@@ -54,7 +54,7 @@ void Symtable::print_table()
     cout << "\n" + string(30,'-') << endl;
     for(int i=0; i < (int)table.size(); i++)
     {
-        cout << "|" << table[i].name << "\t|" << table[i].type << "\t|" << table[i].value << "\t|" 
+        cout << "|" << table[i].name << "\t|" << static_cast<int>(table[i].type) << "\t|" << table[i].value << "\t|" 
         << table[i].address << endl;
     }
 }

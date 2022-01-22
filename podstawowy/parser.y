@@ -2,10 +2,14 @@
 #include "global.h"
 #define YYERROR_VERBOSE 1
 Symtable SYMTABLE;
-extern string operation;
 vector <int> id_vector;
 
 %}
+%union{
+  int index;
+  char operation;
+  VarType variable_type;
+}
 
 %token T_PROGRAM
 %token T_VAR
@@ -13,13 +17,16 @@ vector <int> id_vector;
 %token T_END
 %token T_WRITE
 %token T_ASSIGN
-%token T_INTEGER
-%token T_REAL
-%token T_MULOP
-%token ID
-%token NUM
+%token <variable_type> T_INTEGER
+%token <variable_type> T_REAL
+%token <operation> T_MULOP
+%token <index> ID
+%token <index> NUM
 %left '+' '-'
 %left T_MULOP
+
+%nterm <variable_type> standard_type type
+%nterm <index> identifier_list statement expression
 
 %%
 start: program { SYMTABLE.print_table(); }
@@ -37,7 +44,7 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                               for(int i=0; i< (int) id_vector.size(); i++)
                                                               {
                                                                 //printf("%d , %d\n", id_vector[i], i);
-                                                                SYMTABLE.table[id_vector[i]].type = (VarType)$5;
+                                                                SYMTABLE.table[id_vector[i]].type = $5;
                                                                 SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_address;
                                                                 SYMTABLE.next_address += 4;
                                                               }
@@ -47,8 +54,8 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
 
 type: standard_type {$$ = $1;}
 
-standard_type: T_INTEGER {$$ = (VarType)INTEGER;}
-             | T_REAL {$$ = (VarType)REAL;}
+standard_type: T_INTEGER {$$ = VarType::INTEGER;}
+             | T_REAL {$$ = VarType::REAL;}
 
 
 

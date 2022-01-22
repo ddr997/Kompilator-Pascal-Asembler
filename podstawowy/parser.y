@@ -29,11 +29,11 @@ vector <int> id_vector;
 %nterm <index> identifier_list statement expression
 
 %%
-start: program { SYMTABLE.print_table(); }
+start: program {printf("exit\n"); SYMTABLE.print_table(); }
 
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
-        declarations
-        compound_statement
+        declarations {gencode("jump",0,0,0); printf("lab0:\n");}
+        compound_statement 
 
 program_identifier_list: ID | program_identifier_list ',' ID
 
@@ -184,6 +184,11 @@ void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w ta
   if(operation == "write")
   {
     cout << "write.i " << var1 <<endl;
+  }
+
+  if(operation == "jump")
+  {
+    cout << "jump.i #lab0" << endl;
   }
 }
 

@@ -1,2 +1,7 @@
-a,b,c: integer;
-x,y,z: real;
+program exmp(input, output);
+var x,y: integer;
+begin
+    x := 5;
+    y := x;
+    write(y)
+end.

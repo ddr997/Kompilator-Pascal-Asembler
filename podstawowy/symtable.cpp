@@ -5,8 +5,9 @@ Symtable::Symtable(){}
 int Symtable::insert_to_table(string s, Input_type IT)
 {   
     Record new_record;
-    switch(IT){
-    case Input_type::IDENTIFIER: //swtich
+    switch(IT)
+    {
+    case Input_type::IDENTIFIER:
         new_record.name = s;
         new_record.address = 0;
         table.push_back(new_record);

@@ -22,17 +22,20 @@ vector <int> id_vector;
 %token <operation> T_MULOP
 %token <index> ID
 %token <index> NUM
+%nterm <variable_type> standard_type type
+%nterm <index> identifier_list statement expression
 %left '+' '-'
 %left T_MULOP
 
-%nterm <variable_type> standard_type type
-%nterm <index> identifier_list statement expression
 
 %%
 start: program {printf("exit\n"); SYMTABLE.print_table(); }
 
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
-        declarations {gencode("jump",0,0,0); printf("lab0:\n");}
+        declarations {
+                     gencode("jump",0,0,0);
+                     printf("lab0:\n");
+                     }
         compound_statement 
 
 program_identifier_list: ID | program_identifier_list ',' ID
@@ -66,7 +69,7 @@ statement_list: statement
               | statement_list ';' statement
 
 statement: ID T_ASSIGN expression {
-                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
+                                  //SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
                                   gencode("mov", $3, $1, 0);
                                   }
           | T_WRITE '(' ID ')' {
@@ -75,14 +78,14 @@ statement: ID T_ASSIGN expression {
 
 expression: expression '+' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
+                                      //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("add", $1, $3, newtemp);
                                       }
 
           | expression '-' expression {
                                       int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
+                                      //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("sub", $1, $3, newtemp);
                                       }
@@ -91,21 +94,21 @@ expression: expression '+' expression {
                                          if($2 == '*')
                                          {
                                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
+                                          //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
                                           $$ = newtemp;
                                           gencode("mul", $1, $3, newtemp);
                                          }
                                          if ($2 == '/')
                                          {
                                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
+                                          //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
                                           $$ = newtemp;
                                           gencode("div", $1, $3, newtemp);
                                          }
                                          if ($2 == 'm')
                                          {
                                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
+                                          //SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
                                           $$ = newtemp;
                                           gencode("mod", $1, $3, newtemp);
                                          }
@@ -113,7 +116,7 @@ expression: expression '+' expression {
 
           | '-' expression {
                            int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
+                           //SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            $$ = newtemp;
                            gencode("negation", 0, $2, newtemp);
                            }
@@ -138,8 +141,8 @@ int main()
   exit(0);
 };
 
-void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w tablicy symboli
-{
+void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tablicy symboli
+{//command zamiast ifow!!
   string var1 = to_string(SYMTABLE.table[i1].address); //adresy w stringach
   string var2 = to_string(SYMTABLE.table[i2].address);
   string var3 = to_string(SYMTABLE.table[i3].address);
@@ -147,46 +150,46 @@ void gencode(string operation, int i1, int i2, int i3) //przekazuje indeksy w ta
   if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
   if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
 
-  if(operation == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
+  if(command == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
   {
     cout << "mov.i " << var1 << "," << var2 << endl;
   }
 
-  if(operation == "add")
+  if(command == "add")
   {
     cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "sub"){
+  if(command == "sub"){
     cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "mul")
+  if(command == "mul")
   {
     cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "div")
+  if(command == "div")
   {
     cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "mod")
+  if(command == "mod")
   {
     cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "negation")
+  if(command == "negation")
   {
     cout << "sub.i " << "#0" << "," << var2 << "," << var3 << endl;
   }
 
-  if(operation == "write")
+  if(command == "write")
   {
     cout << "write.i " << var1 <<endl;
-  }
+  } //zbedne i przesunac tam na gore
 
-  if(operation == "jump")
+  if(command == "jump")
   {
     cout << "jump.i #lab0" << endl;
   }

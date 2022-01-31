@@ -1,6 +1,0 @@
-program exmp(input, output);
-var x,y: integer;
-var a: real;
-begin
-    x := 4
-end.

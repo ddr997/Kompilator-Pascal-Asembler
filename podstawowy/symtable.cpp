@@ -2,14 +2,14 @@
 
 Symtable::Symtable(){} 
 
-int Symtable::insert_to_table(string s, Input_type IT, VarType type)
+int Symtable::insert_to_table(string s, Input_type IT)
 {   
     Record new_record;
     switch(IT)
     {
     case Input_type::IDENTIFIER:
         new_record.name = s;
-        new_record.type = type;
+        new_record.address = 0;
         table.push_back(new_record);
         return table.size() - 1;
         break;
@@ -17,7 +17,6 @@ int Symtable::insert_to_table(string s, Input_type IT, VarType type)
     case Input_type::NUMBER:
         new_record.name = s;
         new_record.value = stoi(s);
-        new_record.type = type;
         table.push_back(new_record);
         return table.size() - 1;
         break;
@@ -26,8 +25,8 @@ int Symtable::insert_to_table(string s, Input_type IT, VarType type)
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
         new_record.address = next_address;
-        if(type == VarType::INTEGER){ new_record.type = VarType::INTEGER; next_address += 4; }
-        if(type == VarType::REAL){ new_record.type = VarType::REAL; next_address += 8; }
+        next_address += 4;
+        new_record.type = VarType::INTEGER;
         table.push_back(new_record);
         return table.size() - 1;
         break;

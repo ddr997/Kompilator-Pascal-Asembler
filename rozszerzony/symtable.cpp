@@ -2,30 +2,35 @@
 
 Symtable::Symtable(){} 
 
-int Symtable::insert_to_table(string s, Input_type t)
+int Symtable::insert_to_table(string s, Input_type IT, VarType type)
 {   
-    if(t == identifier)
+    Record new_record;
+    switch(IT)
     {
-        Record new_record;
+    case Input_type::IDENTIFIER:
         new_record.name = s;
-        new_record.address = 0;
+        new_record.type = type;
         table.push_back(new_record);
         return table.size() - 1;
-    }
-    if(t == number)
-    {
-        Record new_record;
+        break;
+
+    case Input_type::NUMBER:
         new_record.name = s;
         new_record.value = stoi(s);
+        new_record.type = type;
         table.push_back(new_record);
         return table.size() - 1;
-    }
-    if(t == temporary){
-        Record new_record;
+        break;
+
+    case Input_type::TEMPORARY:
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
+        new_record.address = next_address;
+        if(type == VarType::INTEGER){ new_record.type = VarType::INTEGER; next_address += 4; }
+        if(type == VarType::REAL){ new_record.type = VarType::REAL; next_address += 8; }
         table.push_back(new_record);
         return table.size() - 1;
+        break;
     }
     return -1;
 }
@@ -51,7 +56,7 @@ void Symtable::print_table()
     cout << "\n" + string(30,'-') << endl;
     for(int i=0; i < (int)table.size(); i++)
     {
-        cout << "|" << table[i].name << "\t|" <<table[i].type << "\t|" << table[i].value << "\t|" 
+        cout << "|" << table[i].name << "\t|" << static_cast<int>(table[i].type) << "\t|" << table[i].value << "\t|" 
         << table[i].address << endl;
     }
 }

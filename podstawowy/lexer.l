@@ -6,10 +6,11 @@ extern Symtable SYMTABLE;
 
 %option noyywrap
 
-IGNORES         [ \t\r\n]+
-LETTER          [a-zA-z]
-NUM             [0-9]+
-ID	            {LETTER}({NUM}|{LETTER})*
+IGNORES             [ \t\r\n]+
+LETTER              [a-zA-z]
+NUM                 [0-9]+
+ID	                {LETTER}({NUM}|{LETTER})*
+OPTIONAL_FRACTION   {NUM}(\.{NUM})?
 
 %%
 {IGNORES}       {}
@@ -41,9 +42,8 @@ mod|"%"         {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
                 {
-                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER);
+                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER, VarType::INTEGER);
                     SYMTABLE.table[yylval.index].value = stoi(yytext);
-                    SYMTABLE.table[yylval.index].type = VarType::INTEGER;
                 }
                 else{ yylval.index = check_if_exists; }
                 return NUM;
@@ -53,11 +53,22 @@ mod|"%"         {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
                 { 
-                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::IDENTIFIER);
+                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::IDENTIFIER, VarType::NONE);
                 }
                 else{ yylval.index = check_if_exists; }
                 return ID;
                 }
+
+{OPTIONAL_FRACTION} {
+                    int check_if_exists = SYMTABLE.find_in_table(yytext);
+                    if(check_if_exists < 0)
+                    { 
+                        yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER, VarType::REAL);
+                        SYMTABLE.table[yylval.index].value = stof(yytext);
+                    }
+                    else{ yylval.index = check_if_exists; }
+                    return NUM;
+                    }
 
 .	            {return yytext[0];}
 

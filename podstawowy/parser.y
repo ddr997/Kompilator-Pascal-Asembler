@@ -71,7 +71,22 @@ statement_list: statement
               | statement_list ';' statement
 
 statement: ID T_ASSIGN expression {
-                                  //SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
+                                  if(SYMTABLE.table[$1].type != SYMTABLE.table[$3].type)
+                                  {
+                                    int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, SYMTABLE.table[$1].type);
+                                    if(SYMTABLE.table[$3].type == VarType::INTEGER)
+                                    {
+                                      gencode("inttoreal", $3, newtemp, -1);
+                                      SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[$3].value;
+                                    }
+                                    if(SYMTABLE.table[$3].type == VarType::REAL)
+                                    {
+                                      gencode("realtoint", $3, newtemp, -1);
+                                      SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$3].value;
+                                    }
+                                    $3 = newtemp;
+                                  }
+                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
                                   gencode("mov", $3, $1, -1);
                                   }
           | T_WRITE '(' ID ')' {
@@ -79,45 +94,85 @@ statement: ID T_ASSIGN expression {
                                }
 
 expression: expression '+' expression {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                      //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
+                                      int newtemp = 0;
+                                      if(SYMTABLE.table[$1].type != SYMTABLE.table[$3].type)
+                                      {
+                                        if(SYMTABLE.table[$1].type == VarType::INTEGER) {$1 = type_conversion($1);}
+                                        if(SYMTABLE.table[$3].type == VarType::INTEGER) {$3 = type_conversion($3);}
+                                        newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+                                      }
+                                      else
+                                      {
+                                        if (SYMTABLE.table[$1].type == VarType::INTEGER)
+                                          newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::INTEGER);
+                                        if (SYMTABLE.table[$1].type == VarType::REAL)
+                                          newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+                                      }
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("add", $1, $3, newtemp);
                                       }
 
           | expression '-' expression {
-                                      int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                      //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
+                                      int newtemp = 0;
+                                      if(SYMTABLE.table[$1].type != SYMTABLE.table[$3].type)
+                                      {
+                                        if(SYMTABLE.table[$1].type == VarType::INTEGER) {$1 = type_conversion($1);}
+                                        if(SYMTABLE.table[$3].type == VarType::INTEGER) {$3 = type_conversion($3);}
+                                        newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+                                      }
+                                      else
+                                      {
+                                        if (SYMTABLE.table[$1].type == VarType::INTEGER)
+                                          newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::INTEGER);
+                                        if (SYMTABLE.table[$1].type == VarType::REAL)
+                                          newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+                                      }
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("sub", $1, $3, newtemp);
                                       }
 
           | expression T_MULOP expression{
+                                          int newtemp = 0;
+                                          if(SYMTABLE.table[$1].type != SYMTABLE.table[$3].type)
+                                          {
+                                            if(SYMTABLE.table[$1].type == VarType::INTEGER) {$1 = type_conversion($1);}
+                                            if(SYMTABLE.table[$3].type == VarType::INTEGER) {$3 = type_conversion($3);}
+                                            newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+                                          }
+                                          else
+                                          {
+                                            if (SYMTABLE.table[$1].type == VarType::INTEGER)
+                                              newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::INTEGER);
+                                            if (SYMTABLE.table[$1].type == VarType::REAL)
+                                              newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+                                          }
+
                                          if($2 == '*')
                                          {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
+                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
                                           $$ = newtemp;
                                           gencode("mul", $1, $3, newtemp);
                                          }
+
                                          if ($2 == '/')
                                          {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          //SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
+                                          SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value / SYMTABLE.table[$3].value;
                                           $$ = newtemp;
                                           gencode("div", $1, $3, newtemp);
                                          }
+                                         
                                          if ($2 == 'm')
                                          {
-                                          int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
-                                          //SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
+                                          SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$1].value % (int) SYMTABLE.table[$3].value;
                                           $$ = newtemp;
                                           gencode("mod", $1, $3, newtemp);
                                          }
                                          }
 
           | '-' expression {
-                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY);
+                           int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::NONE);
                            //SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            $$ = newtemp;
                            gencode("negation", 0, $2, newtemp);
@@ -155,6 +210,14 @@ void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tabl
   string type_postfix = SYMTABLE.table[i1].type == VarType::INTEGER ? ".i " : ".r ";
   ////
   cout << command+type_postfix << var1 << var2 << var3 << endl;
+}
+
+int type_conversion(int i1)
+{
+  int newtemp = SYMTABLE.insert_to_table("$t", Input_type::TEMPORARY, VarType::REAL);
+  SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[i1].value;
+  gencode("inttoreal", i1, newtemp, -1);
+  return newtemp;
 }
 
 void destroy()

@@ -1,7 +1,6 @@
 program exmp(input, output);
-var x,y: integer;
+var x,y: real;
 begin
-    x := 5;
-    y := x;
-    write(y)
+    x := 5 + 11 * 2.5;
+    write(x)
 end.

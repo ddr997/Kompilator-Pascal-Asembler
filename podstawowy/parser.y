@@ -33,8 +33,7 @@ start: program {printf("exit\n"); SYMTABLE.print_table(); }
 
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
         declarations {
-                     gencode("jump",0,0,0);
-                     printf("lab0:\n");
+                     printf("jump.i #lab0\nlab0:\n");
                      }
         compound_statement 
 
@@ -49,7 +48,10 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                                 //printf("%d , %d\n", id_vector[i], i);
                                                                 SYMTABLE.table[id_vector[i]].type = $5;
                                                                 SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_address;
-                                                                SYMTABLE.next_address += 4;
+                                                                if($5 == VarType::INTEGER)
+                                                                  SYMTABLE.next_address += 4;
+                                                                if($5 == VarType::REAL)
+                                                                  SYMTABLE.next_address += 8;
                                                               }
                                                               id_vector.clear();
                                                               }
@@ -70,10 +72,10 @@ statement_list: statement
 
 statement: ID T_ASSIGN expression {
                                   //SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
-                                  gencode("mov", $3, $1, 0);
+                                  gencode("mov", $3, $1, -1);
                                   }
           | T_WRITE '(' ID ')' {
-                                gencode("write", $3, 0, 0);
+                                gencode("write", $3, -1, -1);
                                }
 
 expression: expression '+' expression {
@@ -142,57 +144,17 @@ int main()
 };
 
 void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tablicy symboli
-{//command zamiast ifow!!
-  string var1 = to_string(SYMTABLE.table[i1].address); //adresy w stringach
-  string var2 = to_string(SYMTABLE.table[i2].address);
-  string var3 = to_string(SYMTABLE.table[i3].address);
-  if (isdigit(SYMTABLE.table[i1].name[0])){ var1 = "#" + SYMTABLE.table[i1].name; } //przypisywanie posrednie, bez adresu
-  if (isdigit(SYMTABLE.table[i2].name[0])){ var2 = "#" + SYMTABLE.table[i2].name; }
-  if (isdigit(SYMTABLE.table[i3].name[0])){ var3 = "#" + SYMTABLE.table[i3].name; }
-
-  if(command == "mov") //mamy z hashem i bez hasha, przesylamy adresy w tablicy symboli, jezeli bedzie z num to z # powinno printowac
-  {
-    cout << "mov.i " << var1 << "," << var2 << endl;
-  }
-
-  if(command == "add")
-  {
-    cout << "add.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(command == "sub"){
-    cout << "sub.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(command == "mul")
-  {
-    cout << "mul.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(command == "div")
-  {
-    cout << "div.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(command == "mod")
-  {
-    cout << "mod.i " << var1 << "," << var2 << "," << var3 << endl;
-  }
-
-  if(command == "negation")
-  {
-    cout << "sub.i " << "#0" << "," << var2 << "," << var3 << endl;
-  }
-
-  if(command == "write")
-  {
-    cout << "write.i " << var1 <<endl;
-  } //zbedne i przesunac tam na gore
-
-  if(command == "jump")
-  {
-    cout << "jump.i #lab0" << endl;
-  }
+{
+  string var1 = "", var2 = "", var3 = "";
+  if(i1 >= 0)
+  var1 = isdigit(SYMTABLE.table[i1].name[0]) ? "#" + SYMTABLE.table[i1].name : to_string(SYMTABLE.table[i1].address);
+  if(i2 >= 0)
+  var2 = isdigit(SYMTABLE.table[i2].name[0]) ? ",#" + SYMTABLE.table[i2].name : "," + to_string(SYMTABLE.table[i2].address);
+  if(i3 >= 0)
+  var3 = isdigit(SYMTABLE.table[i3].name[0]) ? ",#" + SYMTABLE.table[i3].name : "," + to_string(SYMTABLE.table[i3].address);
+  string type_postfix = SYMTABLE.table[i1].type == VarType::INTEGER ? ".i " : ".r ";
+  ////
+  cout << command+type_postfix << var1 << var2 << var3 << endl;
 }
 
 void destroy()

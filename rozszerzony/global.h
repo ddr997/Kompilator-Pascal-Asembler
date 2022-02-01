@@ -10,11 +10,14 @@ int yylex();
 int type_conversion(int);
 void yyerror(char const *);
 void gencode(string, int, int, int);
-enum class VarType {NONE, INTEGER, REAL};
-enum class Input_type {IDENTIFIER = 0, NUMBER = 1, TEMPORARY = 2};
+enum class VarType {NONE = -1, INTEGER = 0, REAL = 1};
+enum class InputType {NONE = -1, IDENTIFIER = 0, NUMBER = 1, TEMPORARY = 2, PROCEDURE = 3};
+enum class Scope {GLOBAL = 0, LOCAL = 1};
 struct Record{
-    VarType type = VarType::NONE;
     string name;
+    InputType input_type = InputType::NONE;
+    VarType vartype = VarType::NONE;
+    Scope scope = Scope::GLOBAL;
     float value = 0;
     int address = -1;
 };
@@ -24,7 +27,9 @@ class Symtable{
         vector<Record> table;
         int next_address = 0;
         int next_temp = 0;
-        int insert_to_table(string, Input_type, VarType);
+        int next_local_address = 0;
+        int next_parameter_address = 0;
+        int insert_to_table(string, InputType, VarType);
         int find_in_table(string);
         void print_table();
 };

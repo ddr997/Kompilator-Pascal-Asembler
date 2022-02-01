@@ -2,32 +2,36 @@
 
 Symtable::Symtable(){} 
 
-int Symtable::insert_to_table(string s, Input_type IT, VarType type)
+int Symtable::insert_to_table(string s, InputType input_type, VarType vartype)
 {   
     Record new_record;
-    switch(IT)
+    switch(input_type)
     {
-    case Input_type::IDENTIFIER:
+    case InputType::IDENTIFIER:
         new_record.name = s;
-        new_record.type = type;
+        new_record.vartype = vartype;
+        new_record.input_type = input_type;
         table.push_back(new_record);
         return table.size() - 1;
         break;
 
-    case Input_type::NUMBER:
+    case InputType::NUMBER:
         new_record.name = s;
         new_record.value = stoi(s);
-        new_record.type = type;
+        new_record.vartype = vartype;
+        new_record.input_type = input_type;
         table.push_back(new_record);
         return table.size() - 1;
         break;
 
-    case Input_type::TEMPORARY:
+    case InputType::TEMPORARY:
         new_record.name = s + to_string(next_temp);
         next_temp += 1;
+        new_record.vartype = vartype;
+        new_record.input_type = input_type;
         new_record.address = next_address;
-        if(type == VarType::INTEGER){ new_record.type = VarType::INTEGER; next_address += 4; }
-        if(type == VarType::REAL){ new_record.type = VarType::REAL; next_address += 8; }
+        if(vartype == VarType::INTEGER){ new_record.vartype = VarType::INTEGER; next_address += 4; }
+        if(vartype == VarType::REAL){ new_record.vartype = VarType::REAL; next_address += 8; }
         table.push_back(new_record);
         return table.size() - 1;
         break;
@@ -49,14 +53,15 @@ int Symtable::find_in_table(string s)
 
 void Symtable::print_table()
 {
-    string column_names[4] = {"Name", "Type", "Value", "Address"};
-    for(int i=0; i<4; i++){
-        cout << "|" << column_names[i] << "\t";
+    string column_names[6] = {"Name", "InpTyp", "VarTyp", "Scope", "Value", "Address"};
+    for(int i=0; i<6; i++){
+        cout << "|" << column_names[i] << "\t\t";
     }
-    cout << "\n" + string(30,'-') << endl;
+    cout << "\n" + string(90,'-') << endl;
     for(int i=0; i < (int)table.size(); i++)
     {
-        cout << "|" << table[i].name << "\t|" << static_cast<int>(table[i].type) << "\t|" << table[i].value << "\t|" 
+        cout << "|" << table[i].name << "\t\t|" << static_cast<int>(table[i].input_type) << "\t\t|" << static_cast<int>(table[i].vartype) << "\t\t|"
+        << static_cast<int>(table[i].scope) <<"\t\t|" << table[i].value << "\t\t|" 
         << table[i].address << endl;
     }
 }

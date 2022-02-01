@@ -1,8 +1,13 @@
-program example(input, output);
+program examp(input, output);
 var x, y: integer;
-var g,h:real;
+
+procedure p(a1,a2: integer; a3: real);
+var b: real;
+var c: integer;
+begin
+end;
 
 begin
-  g:=x+y*h;
-  write(g)
+  y:=x+1;
+  write(y)
 end.

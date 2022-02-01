@@ -22,6 +22,9 @@ var             {return T_VAR;}
 integer	        {return T_INTEGER;}
 real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
+
+procedure       {return T_PROCEDURE;}
+
                    
 "/"|div         {
                 yylval.operation = '/';
@@ -42,7 +45,7 @@ mod|"%"         {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
                 {
-                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER, VarType::INTEGER);
+                    yylval.index = SYMTABLE.insert_to_table(yytext, InputType::NUMBER, VarType::INTEGER);
                     SYMTABLE.table[yylval.index].value = stoi(yytext);
                 }
                 else{ yylval.index = check_if_exists; }
@@ -52,8 +55,8 @@ mod|"%"         {
 {ID}	        {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);
                 if(check_if_exists < 0)
-                { 
-                    yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::IDENTIFIER, VarType::NONE);
+                {
+                    yylval.index = SYMTABLE.insert_to_table(yytext, InputType::IDENTIFIER, VarType::NONE);
                 }
                 else{ yylval.index = check_if_exists; }
                 return ID;
@@ -63,7 +66,7 @@ mod|"%"         {
                     int check_if_exists = SYMTABLE.find_in_table(yytext);
                     if(check_if_exists < 0)
                     { 
-                        yylval.index = SYMTABLE.insert_to_table(yytext, Input_type::NUMBER, VarType::REAL);
+                        yylval.index = SYMTABLE.insert_to_table(yytext, InputType::NUMBER, VarType::REAL);
                         SYMTABLE.table[yylval.index].value = stof(yytext);
                     }
                     else{ yylval.index = check_if_exists; }

@@ -35,6 +35,19 @@ int Symtable::insert_to_table(string s, InputType input_type, VarType vartype)
         table.push_back(new_record);
         return table.size() - 1;
         break;
+    
+    case InputType::TEMPORARY_LOCAL:
+        new_record.name = s + to_string(next_temp);
+        next_temp += 1;
+        new_record.vartype = vartype;
+        new_record.input_type = input_type;
+        if(vartype == VarType::INTEGER){ new_record.vartype = VarType::INTEGER; next_local_address -= 4; }
+        if(vartype == VarType::REAL){ new_record.vartype = VarType::REAL; next_local_address -= 8; }
+        new_record.address = next_local_address;
+        table.push_back(new_record);
+        return table.size()-1;
+        break;
+
     }
     return -1;
 }

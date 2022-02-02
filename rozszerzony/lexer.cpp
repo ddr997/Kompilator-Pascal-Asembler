@@ -872,13 +872,18 @@ YY_RULE_SETUP
                 {
                     yylval.index = SYMTABLE.insert_to_table(yytext, InputType::IDENTIFIER, VarType::NONE);
                 }
-                else{ yylval.index = check_if_exists; }
+                else
+                { 
+                    yylval.index = check_if_exists;
+                    //SYMTABLE.global_variables_memory.push_back(SYMTABLE.table[check_if_exists]);
+                    //cout << "wpisano " + SYMTABLE.global_variables_memory[SYMTABLE.global_variables_memory.size()-1].name << endl;
+                }
                 return ID;
                 }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 65 "lexer.l"
+#line 70 "lexer.l"
 {
                     int check_if_exists = SYMTABLE.find_in_table(yytext);
                     if(check_if_exists < 0)
@@ -892,15 +897,15 @@ YY_RULE_SETUP
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 76 "lexer.l"
+#line 81 "lexer.l"
 {return yytext[0];}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 78 "lexer.l"
+#line 83 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 904 "lexer.cpp"
+#line 909 "lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1905,5 +1910,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 78 "lexer.l"
+#line 83 "lexer.l"
 

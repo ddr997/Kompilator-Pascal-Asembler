@@ -2,11 +2,14 @@
 #include "global.h"
 #define YYERROR_VERBOSE 1
 Symtable SYMTABLE;
-vector <int> id_vector;
-vector <int> parameter_vector;
+vector <int> id_vector; //sluzy do przypisywania typow
+vector <int> parameter_vector; //wektor parametrow procedury/funkcji
+vector <string> local_variables; // sluzy do usuwania zmiennych tymczasowych
 Scope actual_scope = Scope::GLOBAL;
+stringstream codeStream;
 
 %}
+
 %union{
   int index;
   char operation;
@@ -34,19 +37,26 @@ Scope actual_scope = Scope::GLOBAL;
 
 
 %%
-start: program {printf("exit\n"); SYMTABLE.print_table(); }
+start: program {SYMTABLE.print_table();}
 
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
          declarations  {
                        actual_scope = Scope::LOCAL; //dla subprogramow
-                       printf("jump.i #lab0\n");
+                       printf("\njump.i #lab0\n");
+                       SYMTABLE.global_variables_memory = SYMTABLE.table;
+                      //  for(int i = 0; i<SYMTABLE.global_variables_memory.size();i++)
+                      //   {cout << "wpisano " + SYMTABLE.global_variables_memory[i].name << endl;}
                        }
         subprogram_declarations {
                                 actual_scope = Scope::GLOBAL; //po wyjsciu z subprogramow
                                 cout << "lab0:" << endl;
                                 }
-        compound_statement
-        '.'
+        compound_statement 
+        '.' {
+            cout << codeStream.str();
+            codeStream.str("");
+            printf("exit\n\n\n");
+            }
 
 program_identifier_list: ID | program_identifier_list ',' ID
 
@@ -60,20 +70,23 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                                 SYMTABLE.table[id_vector[i]].vartype = $5;
                                                                 SYMTABLE.table[id_vector[i]].scope = actual_scope;
 
-                                                                if (actual_scope == Scope::GLOBAL){
+                                                                if (actual_scope == Scope::GLOBAL)
+                                                                {
                                                                   SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_address;
                                                                   if($5 == VarType::INTEGER)
                                                                     SYMTABLE.next_address += 4;
                                                                   if($5 == VarType::REAL)
                                                                     SYMTABLE.next_address += 8;
                                                                 }
-                                                                else
+                                                                else //jest lokalne
                                                                 {
                                                                   if($5 == VarType::INTEGER)
                                                                     {SYMTABLE.next_local_address -= 4;}
                                                                   if($5 == VarType::REAL)
                                                                     {SYMTABLE.next_local_address -= 8;}
                                                                   SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_local_address;
+                                                                  //dodaj do wektora usuwajacego zmienne lokalne indeks dla temp
+                                                                  local_variables.push_back(SYMTABLE.table[id_vector[i]].name); 
                                                                 }
 
                                                               }
@@ -96,25 +109,52 @@ subprogram_declarations: subprogram_declarations subprogram_declaration ';'
                        | /* empty */
 
 subprogram_declaration: subprogram_head 
-                        declarations
+                        declarations {
+                                     } 
                         compound_statement{
+                                          cout << "enter.i #" + to_string(-1*SYMTABLE.next_local_address) << endl; //negujemy. bo next_local idzie w dol
+                                          cout << codeStream.str();
                                           cout << "leave" << endl;
                                           cout << "return" << endl;
+                                          SYMTABLE.next_local_address = 0; //reset adresu lokalnego
+                                          codeStream.str(""); //czyszczenie streamu
+
+                                          //czyszczenie tablicy symboli ze zmiennych tymczasowych
+                                          // for(int i = 0; i < local_variables.size(); i++)
+                                          // {
+                                          //   cout << "\t" + local_variables[i] << endl;
+                                          //   for(int j = 0; j < SYMTABLE.table.size(); j++)
+                                          //   {
+                                          //     if(local_variables[i] == SYMTABLE.table[j].name) SYMTABLE.table.erase(SYMTABLE.table.begin()+j);
+                                          //   }
+                                          // }
+                                          
+                                          //czyszczenie pamieci zmiennych lokalnych do zmiennych globalnych
+                                          for(int i = 0; i < SYMTABLE.global_variables_memory.size(); i++)
+                                          {
+                                            for(int j = 0; j < SYMTABLE.table.size(); j++)
+                                            {
+                                              if(SYMTABLE.global_variables_memory[i].name == SYMTABLE.table[j].name)
+                                                SYMTABLE.table[j] = SYMTABLE.global_variables_memory[i];
+                                            }
+                                          }
                                           }
 
 subprogram_head: T_PROCEDURE ID arguments ';'{
                                              SYMTABLE.table[$2].input_type = InputType::PROCEDURE;
-                                             cout << SYMTABLE.table[$2].name + ":" <<endl;
-                                             
+                                             cout << SYMTABLE.table[$2].name + ":" <<endl; //etykieta procedury
 
-                                             SYMTABLE.next_parameter_address = (int) parameter_vector.size()*4 + 4; //BP+4 dla adresu powrotu, w odwrotnej kolejnosci
+                                             SYMTABLE.next_parameter_address = (int) parameter_vector.size()*4 + 4; //BP+4 dla adresu powrotu, w odwrotnej kolejnosci na stosie
                                              //cout << SYMTABLE.next_parameter_address << endl;
                                              for (int i = 0; i< (int) parameter_vector.size(); i++)
                                              {
                                                SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
                                                SYMTABLE.next_parameter_address -= 4;
+                                               local_variables.push_back(SYMTABLE.table[parameter_vector[i]].name); //dodawaj te zmienne do usuniecia po procedurze
+                                               SYMTABLE.table[$2].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
                                              }
                                              SYMTABLE.next_parameter_address = 0;
+                                             parameter_vector.clear();
                                              id_vector.clear();
                                              }
 
@@ -124,19 +164,18 @@ arguments: '(' parameter_list ')'
 parameter_list: identifier_list ':' type  {
                                           for(int i=0; i< (int) id_vector.size(); i++)
                                           {
-                                            cout << "tutaj nie wszedlem" << endl;
                                             SYMTABLE.table[id_vector[i]].vartype = $3;
                                             SYMTABLE.table[id_vector[i]].scope = actual_scope;
                                             parameter_vector.push_back(id_vector[i]);
                                           }
-                                          id_vector.clear(); //potrzeba czyszczenia po, dlatego dodatkowy wektor
+                                          id_vector.clear(); //potrzeba czyszczenia po, dlatego dodatkowy wektor ktory sumuje dla parametrow lokalnych
                                           }
 
               | parameter_list ';' identifier_list ':' type {
                                                             for(int i=0; i< (int) id_vector.size(); i++)
                                                             {
                                                               SYMTABLE.table[id_vector[i]].vartype = $5;
-                                                              SYMTABLE.table[id_vector[i]].scope = Scope::LOCAL;
+                                                              SYMTABLE.table[id_vector[i]].scope = actual_scope;
                                                               parameter_vector.push_back(id_vector[i]);
                                                             }
                                                             id_vector.clear();
@@ -160,22 +199,27 @@ statement_list: statement
               | statement_list ';' statement
 
 statement: ID T_ASSIGN expression {
-                                  if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype)
+                                  if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype) //jezeli sa roznego typu
                                   {
-                                    int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[$1].vartype);
-                                    if(SYMTABLE.table[$3].vartype == VarType::INTEGER)
+                                    int newtemp = 0;
+                                    if(actual_scope == Scope::GLOBAL)
+                                      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[$1].vartype); //stworz nowa zmienna temp globalna
+                                    else
+                                      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, SYMTABLE.table[$1].vartype); //lokalna
+
+                                    if(SYMTABLE.table[$3].vartype == VarType::INTEGER) //jezeli jest int, to zamien na real
                                     {
                                       gencode("inttoreal", $3, newtemp, -1);
                                       SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[$3].value;
                                     }
-                                    if(SYMTABLE.table[$3].vartype == VarType::REAL)
+                                    if(SYMTABLE.table[$3].vartype == VarType::REAL) //jezeli jest real, to zamien na int
                                     {
                                       gencode("realtoint", $3, newtemp, -1);
                                       SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$3].value;
                                     }
-                                    $3 = newtemp;
+                                    $3 = newtemp; //przypisz adres nowej zmiennej do atrybutu expression
                                   }
-                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value;
+                                  SYMTABLE.table[$1].value = SYMTABLE.table[$3].value; //przypisz wartosc do id
                                   gencode("mov", $3, $1, -1);
                                   }
           | T_WRITE '(' ID ')' {
@@ -184,11 +228,25 @@ statement: ID T_ASSIGN expression {
           
           | procedure_statement
 
-procedure_statement: ID
-                   | ID '(' expression_list ')'
+procedure_statement: ID {codeStream << "call.i #" + SYMTABLE.table[$1].name << endl;}
 
-expression_list: expression
-               | expression_list ',' expression
+                   | ID '(' expression_list ')' {
+                                                for(int i = 0; i<parameter_vector.size(); i++)
+                                                {
+                                                  if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[$1].vartype_vector[i])
+                                                    codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl;
+                                                  else
+                                                  {
+                                                    int newtemp = type_conversion(parameter_vector[i]);
+                                                    codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl;
+                                                  }
+                                                }
+                                                codeStream << "call.i #" + SYMTABLE.table[$1].name << endl;
+                                                parameter_vector.clear();
+                                                }
+
+expression_list: expression {parameter_vector.push_back($1);} //zbiera indeksy parametrow
+               | expression_list ',' expression {parameter_vector.push_back($3);} //to samo
 
 
 
@@ -314,14 +372,32 @@ void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tabl
   var3 = isdigit(SYMTABLE.table[i3].name[0]) ? ",#" + SYMTABLE.table[i3].name : "," + to_string(SYMTABLE.table[i3].address);
   string type_postfix = SYMTABLE.table[i1].vartype == VarType::INTEGER ? ".i " : ".r ";
   ////
-  cout << command+type_postfix << var1 << var2 << var3 << endl;
+  if(actual_scope == Scope::GLOBAL)
+    codeStream << command+type_postfix << var1 << var2 << var3 << endl;
+  if(actual_scope == Scope::LOCAL)
+  {
+    if(var1[0] != '#' && var1 != "") var1.insert(0,"BP");
+    if(var2[1] != '#' && var2 != "") var2.insert(1,"BP");
+    if(var3[1] != '#' && var3 != "") var3.insert(1,"BP");
+    codeStream << command+type_postfix << var1 << var2 << var3 << endl;
+  }
 }
 
 int type_conversion(int i1)
 {
-  int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-  SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[i1].value;
-  gencode("inttoreal", i1, newtemp, -1);
+  int newtemp = 0;
+  if(SYMTABLE.table[i1].vartype == VarType::INTEGER)
+  {
+    newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+    SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[i1].value;
+    gencode("inttoreal", i1, newtemp, -1);
+  }
+  if(SYMTABLE.table[i1].vartype == VarType::REAL)
+  {
+    newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
+    SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[i1].value;
+    gencode("realtoint", i1, newtemp, -1);
+  }
   return newtemp;
 }
 

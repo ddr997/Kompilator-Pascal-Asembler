@@ -58,7 +58,12 @@ mod|"%"         {
                 {
                     yylval.index = SYMTABLE.insert_to_table(yytext, InputType::IDENTIFIER, VarType::NONE);
                 }
-                else{ yylval.index = check_if_exists; }
+                else
+                { 
+                    yylval.index = check_if_exists;
+                    //SYMTABLE.global_variables_memory.push_back(SYMTABLE.table[check_if_exists]);
+                    //cout << "wpisano " + SYMTABLE.global_variables_memory[SYMTABLE.global_variables_memory.size()-1].name << endl;
+                }
                 return ID;
                 }
 

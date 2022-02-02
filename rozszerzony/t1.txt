@@ -1,13 +1,16 @@
 program examp(input, output);
 var x, y: integer;
+var z,c: real;
 
-procedure p(a1,a2: integer; a3: real);
+procedure p(a,x:integer;b,c:real);
 var b: real;
-var c: integer;
+var x: integer;
 begin
+b := 5
 end;
 
 begin
   y:=x+1;
+  p(x,y,z,x);
   write(y)
 end.

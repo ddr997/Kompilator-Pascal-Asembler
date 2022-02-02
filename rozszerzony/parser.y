@@ -2,11 +2,11 @@
 #include "global.h"
 #define YYERROR_VERBOSE 1
 Symtable SYMTABLE;
-vector <int> id_vector; //sluzy do przypisywania typow
+vector <int> id_vector; //sluzy do przypisywania typow przy deklaracji
 vector <int> parameter_vector; //wektor parametrow procedury/funkcji
-vector <string> local_variables; // sluzy do usuwania zmiennych tymczasowych
-Scope actual_scope = Scope::GLOBAL;
-stringstream codeStream;
+//vector <string> local_variables; // sluzy do usuwania zmiennych tymczasowych
+Scope actual_scope = Scope::GLOBAL; //okresla w ktorej czesci gramatyki jestesmy
+stringstream codeStream; //stringstream do wypisywania kodu
 
 %}
 
@@ -86,7 +86,7 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                                     {SYMTABLE.next_local_address -= 8;}
                                                                   SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_local_address;
                                                                   //dodaj do wektora usuwajacego zmienne lokalne indeks dla temp
-                                                                  local_variables.push_back(SYMTABLE.table[id_vector[i]].name); 
+                                                                  //local_variables.push_back(SYMTABLE.table[id_vector[i]].name); 
                                                                 }
 
                                                               }
@@ -150,7 +150,7 @@ subprogram_head: T_PROCEDURE ID arguments ';'{
                                              {
                                                SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
                                                SYMTABLE.next_parameter_address -= 4;
-                                               local_variables.push_back(SYMTABLE.table[parameter_vector[i]].name); //dodawaj te zmienne do usuniecia po procedurze
+                                               //local_variables.push_back(SYMTABLE.table[parameter_vector[i]].name); //dodawaj te zmienne do usuniecia po procedurze
                                                SYMTABLE.table[$2].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
                                              }
                                              SYMTABLE.next_parameter_address = 0;
@@ -228,20 +228,26 @@ statement: ID T_ASSIGN expression {
           
           | procedure_statement
 
-procedure_statement: ID {codeStream << "call.i #" + SYMTABLE.table[$1].name << endl;}
+
+
+
+
+
+procedure_statement: ID {codeStream << "call.i #" + SYMTABLE.table[$1].name << endl;} //wywolanie procedury bez parametrow
 
                    | ID '(' expression_list ')' {
-                                                for(int i = 0; i<parameter_vector.size(); i++)
+                                                for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow
                                                 {
-                                                  if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[$1].vartype_vector[i])
-                                                    codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl;
+                                                  if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[$1].vartype_vector[i]) //jezeli sa takiego samego typu
+                                                    codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl; //pushuj bezposrednio ten adres
                                                   else
                                                   {
-                                                    int newtemp = type_conversion(parameter_vector[i]);
+                                                    int newtemp = type_conversion(parameter_vector[i]); //jezeli sa innego typu, to najpierw trzeba konwersje i push nowego
                                                     codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl;
                                                   }
                                                 }
-                                                codeStream << "call.i #" + SYMTABLE.table[$1].name << endl;
+                                                codeStream << "call.i #" + SYMTABLE.table[$1].name << endl; //wywolanie procedury
+                                                codeStream << "incsp.i #" + to_string(parameter_vector.size()*4) << endl; //podnosimy ze stosu tyle ile push 
                                                 parameter_vector.clear();
                                                 }
 
@@ -257,60 +263,36 @@ expression_list: expression {parameter_vector.push_back($1);} //zbiera indeksy p
 
 
 expression: expression '+' expression {
-                                      int newtemp = 0;
-                                      if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype)
+                                      if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype) //jezeli sa roznego typu
                                       {
-                                        if(SYMTABLE.table[$1].vartype == VarType::INTEGER) {$1 = type_conversion($1);}
-                                        if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);}
-                                        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+                                        if(SYMTABLE.table[$1].vartype == VarType::INTEGER) {$1 = type_conversion($1);} //jezeli 1 jest integerem, to zamien to zmienna temp
+                                        if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);} //jezeli 3, to to samo
                                       }
-                                      else
-                                      {
-                                        if (SYMTABLE.table[$1].vartype == VarType::INTEGER)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
-                                        if (SYMTABLE.table[$1].vartype == VarType::REAL)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                      }
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value;
-                                      $$ = newtemp;
+                                      int newtemp = expression_result_temp_gen($1, $3);
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value; //przypisz tam wartosc
+                                      $$ = newtemp; //przekaz dalej indeks wyniku
                                       gencode("add", $1, $3, newtemp);
                                       }
 
           | expression '-' expression {
-                                      int newtemp = 0;
                                       if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype)
                                       {
                                         if(SYMTABLE.table[$1].vartype == VarType::INTEGER) {$1 = type_conversion($1);}
                                         if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);}
-                                        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
                                       }
-                                      else
-                                      {
-                                        if (SYMTABLE.table[$1].vartype == VarType::INTEGER)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
-                                        if (SYMTABLE.table[$1].vartype == VarType::REAL)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                      }
+                                      int newtemp = expression_result_temp_gen($1, $3);
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("sub", $1, $3, newtemp);
                                       }
 
           | expression T_MULOP expression{
-                                          int newtemp = 0;
-                                          if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype)
-                                          {
+                                         if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype)
+                                         {
                                             if(SYMTABLE.table[$1].vartype == VarType::INTEGER) {$1 = type_conversion($1);}
                                             if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);}
-                                            newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                          }
-                                          else
-                                          {
-                                            if (SYMTABLE.table[$1].vartype == VarType::INTEGER)
-                                              newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
-                                            if (SYMTABLE.table[$1].vartype == VarType::REAL)
-                                              newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                          }
+                                         }
+                                         int newtemp = expression_result_temp_gen($1, $3);
 
                                          if($2 == '*')
                                          {
@@ -376,9 +358,9 @@ void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tabl
     codeStream << command+type_postfix << var1 << var2 << var3 << endl;
   if(actual_scope == Scope::LOCAL)
   {
-    if(var1[0] != '#' && var1 != "") var1.insert(0,"BP");
-    if(var2[1] != '#' && var2 != "") var2.insert(1,"BP");
-    if(var3[1] != '#' && var3 != "") var3.insert(1,"BP");
+    if(var1[0] != '#' && var1 != "") if(var1[0] == '-') var1.insert(0,"BP"); else var1.insert(0,"*BP+");
+    if(var2[1] != '#' && var2 != "") if(var2[1] == '-') var2.insert(1,"BP"); else var2.insert(1,"*BP+");
+    if(var3[1] != '#' && var3 != "") if(var3[1] == '-') var3.insert(1,"BP"); else var3.insert(1,"*BP+");
     codeStream << command+type_postfix << var1 << var2 << var3 << endl;
   }
 }
@@ -388,15 +370,48 @@ int type_conversion(int i1)
   int newtemp = 0;
   if(SYMTABLE.table[i1].vartype == VarType::INTEGER)
   {
-    newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+    if(actual_scope == Scope::GLOBAL)
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+    else
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL);
     SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[i1].value;
     gencode("inttoreal", i1, newtemp, -1);
   }
+
   if(SYMTABLE.table[i1].vartype == VarType::REAL)
   {
-    newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
+    if(actual_scope == Scope::GLOBAL)
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
+    else
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
     SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[i1].value;
     gencode("realtoint", i1, newtemp, -1);
+  }
+  return newtemp;
+}
+
+int expression_result_temp_gen(int i1, int i3)
+{
+  int newtemp = 0;
+  if(SYMTABLE.table[i1].vartype != SYMTABLE.table[i3].vartype) //jezeli sa roznego typu
+  {
+    if(actual_scope == Scope::GLOBAL)
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL); //stworz nowa zmienna na wynik operacji
+    else
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL); //stworz nowa zmienna lokalna na wynik operacji
+  }
+  else //jezeli sa tego samego typu
+  {
+    if (SYMTABLE.table[i1].vartype == VarType::INTEGER)
+      if(actual_scope == Scope::GLOBAL)
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //stworz zmienna na wynik typu int
+      else
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER); //stworz zmienna na wynik typu in
+    if (SYMTABLE.table[i1].vartype == VarType::REAL)
+      if(actual_scope == Scope::GLOBAL)
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL); //stworz zmienna na wynik typu real
+      else
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL); //stworz zmienna na wynik typu real
   }
   return newtemp;
 }

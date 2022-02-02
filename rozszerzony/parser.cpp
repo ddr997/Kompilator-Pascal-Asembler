@@ -71,11 +71,11 @@
 #include "global.h"
 #define YYERROR_VERBOSE 1
 Symtable SYMTABLE;
-vector <int> id_vector; //sluzy do przypisywania typow
+vector <int> id_vector; //sluzy do przypisywania typow przy deklaracji
 vector <int> parameter_vector; //wektor parametrow procedury/funkcji
-vector <string> local_variables; // sluzy do usuwania zmiennych tymczasowych
-Scope actual_scope = Scope::GLOBAL;
-stringstream codeStream;
+//vector <string> local_variables; // sluzy do usuwania zmiennych tymczasowych
+Scope actual_scope = Scope::GLOBAL; //okresla w ktorej czesci gramatyki jestesmy
+stringstream codeStream; //stringstream do wypisywania kodu
 
 
 #line 82 "parser.cpp"
@@ -530,8 +530,8 @@ static const yytype_int16 yyrline[] =
        0,    40,    40,    43,    50,    42,    61,    61,    63,    64,
       66,    95,    97,    99,   100,   108,   109,   112,   111,   143,
      161,   162,   164,   174,   193,   195,   196,   198,   199,   201,
-     225,   229,   231,   233,   248,   249,   259,   279,   299,   337,
-     344,   345,   346
+     225,   229,   236,   238,   254,   255,   265,   277,   289,   319,
+     326,   327,   328
 };
 #endif
 
@@ -1448,7 +1448,7 @@ yyreduce:
                                                                     {SYMTABLE.next_local_address -= 8;}
                                                                   SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_local_address;
                                                                   //dodaj do wektora usuwajacego zmienne lokalne indeks dla temp
-                                                                  local_variables.push_back(SYMTABLE.table[id_vector[i]].name); 
+                                                                  //local_variables.push_back(SYMTABLE.table[id_vector[i]].name); 
                                                                 }
 
                                                               }
@@ -1527,7 +1527,7 @@ yyreduce:
                                              {
                                                SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
                                                SYMTABLE.next_parameter_address -= 4;
-                                               local_variables.push_back(SYMTABLE.table[parameter_vector[i]].name); //dodawaj te zmienne do usuniecia po procedurze
+                                               //local_variables.push_back(SYMTABLE.table[parameter_vector[i]].name); //dodawaj te zmienne do usuniecia po procedurze
                                                SYMTABLE.table[(yyvsp[-2].index)].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
                                              }
                                              SYMTABLE.next_parameter_address = 0;
@@ -1603,107 +1603,84 @@ yyreduce:
     break;
 
   case 32:
-#line 231 "parser.y"
+#line 236 "parser.y"
                         {codeStream << "call.i #" + SYMTABLE.table[(yyvsp[0].index)].name << endl;}
 #line 1609 "parser.cpp"
     break;
 
   case 33:
-#line 233 "parser.y"
+#line 238 "parser.y"
                                                 {
-                                                for(int i = 0; i<parameter_vector.size(); i++)
+                                                for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow
                                                 {
-                                                  if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i])
-                                                    codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl;
+                                                  if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i]) //jezeli sa takiego samego typu
+                                                    codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl; //pushuj bezposrednio ten adres
                                                   else
                                                   {
-                                                    int newtemp = type_conversion(parameter_vector[i]);
+                                                    int newtemp = type_conversion(parameter_vector[i]); //jezeli sa innego typu, to najpierw trzeba konwersje i push nowego
                                                     codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl;
                                                   }
                                                 }
-                                                codeStream << "call.i #" + SYMTABLE.table[(yyvsp[-3].index)].name << endl;
+                                                codeStream << "call.i #" + SYMTABLE.table[(yyvsp[-3].index)].name << endl; //wywolanie procedury
+                                                codeStream << "incsp.i #" + to_string(parameter_vector.size()*4) << endl; //podnosimy ze stosu tyle ile push 
                                                 parameter_vector.clear();
                                                 }
-#line 1628 "parser.cpp"
+#line 1629 "parser.cpp"
     break;
 
   case 34:
-#line 248 "parser.y"
+#line 254 "parser.y"
                             {parameter_vector.push_back((yyvsp[0].index));}
-#line 1634 "parser.cpp"
+#line 1635 "parser.cpp"
     break;
 
   case 35:
-#line 249 "parser.y"
+#line 255 "parser.y"
                                                 {parameter_vector.push_back((yyvsp[0].index));}
-#line 1640 "parser.cpp"
+#line 1641 "parser.cpp"
     break;
 
   case 36:
-#line 259 "parser.y"
+#line 265 "parser.y"
                                       {
-                                      int newtemp = 0;
-                                      if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype)
+                                      if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype) //jezeli sa roznego typu
                                       {
-                                        if(SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER) {(yyvsp[-2].index) = type_conversion((yyvsp[-2].index));}
-                                        if(SYMTABLE.table[(yyvsp[0].index)].vartype == VarType::INTEGER) {(yyvsp[0].index) = type_conversion((yyvsp[0].index));}
-                                        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+                                        if(SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER) {(yyvsp[-2].index) = type_conversion((yyvsp[-2].index));} //jezeli 1 jest integerem, to zamien to zmienna temp
+                                        if(SYMTABLE.table[(yyvsp[0].index)].vartype == VarType::INTEGER) {(yyvsp[0].index) = type_conversion((yyvsp[0].index));} //jezeli 3, to to samo
                                       }
-                                      else
-                                      {
-                                        if (SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
-                                        if (SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::REAL)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                      }
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[(yyvsp[-2].index)].value + SYMTABLE.table[(yyvsp[0].index)].value;
-                                      (yyval.index) = newtemp;
+                                      int newtemp = expression_result_temp_gen((yyvsp[-2].index), (yyvsp[0].index));
+                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[(yyvsp[-2].index)].value + SYMTABLE.table[(yyvsp[0].index)].value; //przypisz tam wartosc
+                                      (yyval.index) = newtemp; //przekaz dalej indeks wyniku
                                       gencode("add", (yyvsp[-2].index), (yyvsp[0].index), newtemp);
                                       }
-#line 1664 "parser.cpp"
+#line 1657 "parser.cpp"
     break;
 
   case 37:
-#line 279 "parser.y"
+#line 277 "parser.y"
                                       {
-                                      int newtemp = 0;
                                       if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype)
                                       {
                                         if(SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER) {(yyvsp[-2].index) = type_conversion((yyvsp[-2].index));}
                                         if(SYMTABLE.table[(yyvsp[0].index)].vartype == VarType::INTEGER) {(yyvsp[0].index) = type_conversion((yyvsp[0].index));}
-                                        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
                                       }
-                                      else
-                                      {
-                                        if (SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
-                                        if (SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::REAL)
-                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                      }
+                                      int newtemp = expression_result_temp_gen((yyvsp[-2].index), (yyvsp[0].index));
                                       SYMTABLE.table[newtemp].value = SYMTABLE.table[(yyvsp[-2].index)].value - SYMTABLE.table[(yyvsp[0].index)].value;
                                       (yyval.index) = newtemp;
                                       gencode("sub", (yyvsp[-2].index), (yyvsp[0].index), newtemp);
                                       }
-#line 1688 "parser.cpp"
+#line 1673 "parser.cpp"
     break;
 
   case 38:
-#line 299 "parser.y"
+#line 289 "parser.y"
                                          {
-                                          int newtemp = 0;
-                                          if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype)
-                                          {
+                                         if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype)
+                                         {
                                             if(SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER) {(yyvsp[-2].index) = type_conversion((yyvsp[-2].index));}
                                             if(SYMTABLE.table[(yyvsp[0].index)].vartype == VarType::INTEGER) {(yyvsp[0].index) = type_conversion((yyvsp[0].index));}
-                                            newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                          }
-                                          else
-                                          {
-                                            if (SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::INTEGER)
-                                              newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
-                                            if (SYMTABLE.table[(yyvsp[-2].index)].vartype == VarType::REAL)
-                                              newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
-                                          }
+                                         }
+                                         int newtemp = expression_result_temp_gen((yyvsp[-2].index), (yyvsp[0].index));
 
                                          if((yyvsp[-1].operation) == '*')
                                          {
@@ -1726,40 +1703,40 @@ yyreduce:
                                           gencode("mod", (yyvsp[-2].index), (yyvsp[0].index), newtemp);
                                          }
                                          }
-#line 1730 "parser.cpp"
+#line 1707 "parser.cpp"
     break;
 
   case 39:
-#line 337 "parser.y"
+#line 319 "parser.y"
                            {
                            int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::NONE);
                            //SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            (yyval.index) = newtemp;
                            gencode("negation", 0, (yyvsp[0].index), newtemp);
                            }
-#line 1741 "parser.cpp"
+#line 1718 "parser.cpp"
     break;
 
   case 40:
-#line 344 "parser.y"
+#line 326 "parser.y"
                                {(yyval.index) = (yyvsp[-1].index);}
-#line 1747 "parser.cpp"
+#line 1724 "parser.cpp"
     break;
 
   case 41:
-#line 345 "parser.y"
+#line 327 "parser.y"
                {(yyval.index) = (yyvsp[0].index);}
-#line 1753 "parser.cpp"
+#line 1730 "parser.cpp"
     break;
 
   case 42:
-#line 346 "parser.y"
+#line 328 "parser.y"
                 {(yyval.index) = (yyvsp[0].index);}
-#line 1759 "parser.cpp"
+#line 1736 "parser.cpp"
     break;
 
 
-#line 1763 "parser.cpp"
+#line 1740 "parser.cpp"
 
       default: break;
     }
@@ -1991,7 +1968,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 348 "parser.y"
+#line 330 "parser.y"
 
 
 
@@ -2023,9 +2000,9 @@ void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tabl
     codeStream << command+type_postfix << var1 << var2 << var3 << endl;
   if(actual_scope == Scope::LOCAL)
   {
-    if(var1[0] != '#' && var1 != "") var1.insert(0,"BP");
-    if(var2[1] != '#' && var2 != "") var2.insert(1,"BP");
-    if(var3[1] != '#' && var3 != "") var3.insert(1,"BP");
+    if(var1[0] != '#' && var1 != "") if(var1[0] == '-') var1.insert(0,"BP"); else var1.insert(0,"*BP+");
+    if(var2[1] != '#' && var2 != "") if(var2[1] == '-') var2.insert(1,"BP"); else var2.insert(1,"*BP+");
+    if(var3[1] != '#' && var3 != "") if(var3[1] == '-') var3.insert(1,"BP"); else var3.insert(1,"*BP+");
     codeStream << command+type_postfix << var1 << var2 << var3 << endl;
   }
 }
@@ -2035,15 +2012,48 @@ int type_conversion(int i1)
   int newtemp = 0;
   if(SYMTABLE.table[i1].vartype == VarType::INTEGER)
   {
-    newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+    if(actual_scope == Scope::GLOBAL)
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
+    else
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL);
     SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[i1].value;
     gencode("inttoreal", i1, newtemp, -1);
   }
+
   if(SYMTABLE.table[i1].vartype == VarType::REAL)
   {
-    newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
+    if(actual_scope == Scope::GLOBAL)
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
+    else
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
     SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[i1].value;
     gencode("realtoint", i1, newtemp, -1);
+  }
+  return newtemp;
+}
+
+int expression_result_temp_gen(int i1, int i3)
+{
+  int newtemp = 0;
+  if(SYMTABLE.table[i1].vartype != SYMTABLE.table[i3].vartype) //jezeli sa roznego typu
+  {
+    if(actual_scope == Scope::GLOBAL)
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL); //stworz nowa zmienna na wynik operacji
+    else
+      newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL); //stworz nowa zmienna lokalna na wynik operacji
+  }
+  else //jezeli sa tego samego typu
+  {
+    if (SYMTABLE.table[i1].vartype == VarType::INTEGER)
+      if(actual_scope == Scope::GLOBAL)
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //stworz zmienna na wynik typu int
+      else
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER); //stworz zmienna na wynik typu in
+    if (SYMTABLE.table[i1].vartype == VarType::REAL)
+      if(actual_scope == Scope::GLOBAL)
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL); //stworz zmienna na wynik typu real
+      else
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL); //stworz zmienna na wynik typu real
   }
   return newtemp;
 }

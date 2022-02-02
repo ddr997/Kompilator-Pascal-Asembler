@@ -9,6 +9,7 @@ void destroy();
 int yylex_destroy();
 int yylex();
 int type_conversion(int);
+int expression_result_temp_gen(int, int);
 void yyerror(char const *);
 void gencode(string, int, int, int);
 enum class VarType {NONE = -1, INTEGER = 0, REAL = 1};
@@ -28,10 +29,10 @@ class Symtable{
         Symtable();
         vector<Record> table;
         vector<Record> global_variables_memory; //nadpisywanie zmiennej globalnej przez zmienna lokalna
-        int next_address = 0;
+        int next_address = 0; //adresy dla zmiennych globalnych
         int next_temp = 0;
-        int next_local_address = 0;
-        int next_parameter_address = 0;
+        int next_local_address = 0; //adresowanie dla zmiennych lokalnych
+        int next_parameter_address = 0; //adresy dla parametrów w funkcjach/procedurach
         int insert_to_table(string, InputType, VarType);
         int find_in_table(string);
         void print_table();

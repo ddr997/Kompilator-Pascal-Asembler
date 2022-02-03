@@ -56,11 +56,12 @@ extern int yydebug;
     T_WRITE = 262,
     T_ASSIGN = 263,
     T_PROCEDURE = 264,
-    T_INTEGER = 265,
-    T_REAL = 266,
-    T_MULOP = 267,
-    ID = 268,
-    NUM = 269
+    T_FUNCTION = 265,
+    T_INTEGER = 266,
+    T_REAL = 267,
+    T_MULOP = 268,
+    ID = 269,
+    NUM = 270
   };
 #endif
 
@@ -74,7 +75,7 @@ union YYSTYPE
   char operation;
   VarType variable_type;
 
-#line 78 "parser.hpp"
+#line 79 "parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

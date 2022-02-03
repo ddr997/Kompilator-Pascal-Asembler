@@ -133,11 +133,12 @@ extern int yydebug;
     T_WRITE = 262,
     T_ASSIGN = 263,
     T_PROCEDURE = 264,
-    T_INTEGER = 265,
-    T_REAL = 266,
-    T_MULOP = 267,
-    ID = 268,
-    NUM = 269
+    T_FUNCTION = 265,
+    T_INTEGER = 266,
+    T_REAL = 267,
+    T_MULOP = 268,
+    ID = 269,
+    NUM = 270
   };
 #endif
 
@@ -151,7 +152,7 @@ union YYSTYPE
   char operation;
   VarType variable_type;
 
-#line 155 "parser.cpp"
+#line 156 "parser.cpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -470,19 +471,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   73
+#define YYLAST   90
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  23
+#define YYNTOKENS  24
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  23
+#define YYNNTS  22
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  42
+#define YYNRULES  43
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  84
+#define YYNSTATES  92
 
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   269
+#define YYMAXUTOK   270
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -498,8 +499,8 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      17,    18,     2,    15,    21,    16,    20,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    22,    19,
+      18,    19,     2,    16,    22,    17,    21,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    23,    20,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -520,18 +521,19 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11,    12,    13,    14
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    40,    40,    43,    50,    42,    61,    61,    63,    64,
-      66,    95,    97,    99,   100,   108,   109,   112,   111,   143,
-     161,   162,   164,   174,   193,   195,   196,   198,   199,   201,
-     225,   229,   236,   238,   254,   255,   265,   277,   289,   319,
-     326,   327,   328
+       0,    41,    41,    44,    51,    43,    62,    62,    64,    65,
+      67,    96,    98,   100,   101,   114,   115,   117,   148,   166,
+     184,   185,   187,   197,   216,   220,   221,   223,   224,   226,
+     250,   254,   261,   273,   299,   302,   312,   324,   336,   366,
+     373,   374,   408,   420
 };
 #endif
 
@@ -541,14 +543,14 @@ static const yytype_int16 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "T_PROGRAM", "T_VAR", "T_BEGIN", "T_END",
-  "T_WRITE", "T_ASSIGN", "T_PROCEDURE", "T_INTEGER", "T_REAL", "T_MULOP",
-  "ID", "NUM", "'+'", "'-'", "'('", "')'", "';'", "'.'", "','", "':'",
-  "$accept", "standard_type", "type", "identifier_list", "statement",
-  "expression", "start", "program", "$@1", "$@2",
-  "program_identifier_list", "declarations", "subprogram_declarations",
-  "subprogram_declaration", "$@3", "subprogram_head", "arguments",
-  "parameter_list", "compound_statement", "optional_statements",
-  "statement_list", "procedure_statement", "expression_list", YY_NULLPTR
+  "T_WRITE", "T_ASSIGN", "T_PROCEDURE", "T_FUNCTION", "T_INTEGER",
+  "T_REAL", "T_MULOP", "ID", "NUM", "'+'", "'-'", "'('", "')'", "';'",
+  "'.'", "','", "':'", "$accept", "standard_type", "type",
+  "identifier_list", "statement", "expression", "procedure_statement",
+  "start", "program", "$@1", "$@2", "program_identifier_list",
+  "declarations", "subprogram_declarations", "subprogram_declaration",
+  "subprogram_head", "arguments", "parameter_list", "compound_statement",
+  "optional_statements", "statement_list", "expression_list", YY_NULLPTR
 };
 #endif
 
@@ -558,12 +560,12 @@ static const char *const yytname[] =
 static const yytype_int16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267,   268,   269,    43,    45,    40,    41,    59,
-      46,    44,    58
+     265,   266,   267,   268,   269,   270,    43,    45,    40,    41,
+      59,    46,    44,    58
 };
 # endif
 
-#define YYPACT_NINF (-54)
+#define YYPACT_NINF (-57)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -577,15 +579,16 @@ static const yytype_int16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-       5,    -9,    20,   -54,    21,   -54,    32,   -54,   -12,    27,
-      34,   -54,   -54,    10,    35,   -54,   -54,    13,    40,    37,
-      26,    38,    47,    36,   -54,   -54,   -54,   -54,   -54,    39,
-      42,    -6,    33,   -54,    10,   -54,    35,    41,    44,    -5,
-     -54,    48,    43,   -54,   -54,    47,    18,    23,   -54,    50,
-      14,    14,   -54,    -6,   -54,    26,   -54,    35,    46,   -54,
-     -54,    14,    14,    17,    17,    -3,   -54,   -54,    22,   -54,
-      45,     1,    14,    14,    14,   -54,    14,    26,   -54,   -54,
-      45,    45,    17,   -54
+       1,    -4,    22,   -57,    24,   -57,    21,   -57,    -2,    10,
+      39,   -57,   -57,    50,    42,   -57,   -57,    15,    31,    43,
+      32,    44,    45,    11,    35,   -57,   -57,   -57,   -57,   -57,
+      40,    46,    46,     0,    47,   -57,    41,   -57,    42,    49,
+      38,    48,    -5,   -57,   -57,    56,    51,   -57,   -57,    25,
+      30,   -57,    32,    53,    -9,    -9,   -57,     0,    32,   -57,
+      42,    52,    54,    57,   -57,    -9,    -9,    16,    16,    12,
+     -57,   -57,    29,   -57,   -57,    -9,    61,     2,    -9,    -9,
+      -9,   -57,    -9,    32,    17,   -57,   -57,    61,    61,    16,
+     -57,   -57
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -595,29 +598,30 @@ static const yytype_int8 yydefact[] =
 {
        0,     0,     0,     2,     0,     1,     0,     6,     0,     0,
        0,    11,     7,     3,     0,    16,     8,     0,     4,     0,
-       0,     0,     0,     0,    11,     9,    13,    14,    12,     0,
-      21,    26,     0,    15,    17,    10,     0,     0,     0,    32,
-      27,     0,    25,    31,     5,     0,     0,     0,    19,     0,
-       0,     0,    24,     0,    18,     0,    20,     0,     0,    41,
-      42,     0,     0,    29,    34,     0,    28,    22,     0,    30,
-      39,     0,     0,     0,     0,    33,     0,     0,    40,    38,
-      36,    37,    35,    23
+       0,     0,     0,     0,     0,    11,     9,    13,    14,    12,
+       0,    21,    21,    26,     0,    15,     0,    10,     0,     0,
+       0,     0,    32,    27,    31,     0,    25,     5,    17,     0,
+       0,    18,     0,     0,     0,     0,    24,     0,     0,    20,
+       0,     0,     0,    42,    43,     0,     0,    29,    34,     0,
+      28,    22,     0,    19,    30,     0,    39,     0,     0,     0,
+       0,    33,     0,     0,     0,    40,    38,    36,    37,    35,
+      23,    41
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -54,   -54,   -53,   -31,     3,   -51,   -54,   -54,   -54,   -54,
-     -54,    49,   -54,   -54,   -54,   -54,   -54,   -54,    24,   -54,
-     -54,   -54,   -54
+     -57,    13,   -56,   -37,     6,   -54,   -57,   -57,   -57,   -57,
+     -57,   -57,    55,   -57,   -57,   -57,    58,   -57,    34,   -57,
+     -57,     3
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,    28,    29,    17,    40,    63,     2,     3,    15,    22,
-       8,    13,    18,    23,    45,    24,    37,    47,    32,    41,
-      42,    43,    65
+      -1,    29,    30,    17,    43,    68,    44,     2,     3,    15,
+      23,     8,    13,    18,    24,    25,    39,    50,    34,    45,
+      46,    69
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -625,61 +629,66 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      64,    38,    67,    50,     4,    46,     9,    39,     1,    10,
-      70,    71,    51,    72,    14,    75,    73,    74,    76,    78,
-       5,    79,    80,    81,    83,    82,    68,    59,    60,    72,
-      61,    62,    73,    74,    19,    20,    26,    27,     6,    19,
-      55,    56,    57,    19,    77,     7,    11,    12,    16,    21,
-      25,    30,    31,    44,    52,    33,    66,    72,    35,    36,
-      48,    49,    53,    58,    69,     0,     0,     0,     0,    54,
-       0,     0,     0,    34
+      67,    49,    71,    54,     1,    63,    64,    41,    65,    66,
+       4,    76,    77,    55,    42,    78,    33,     9,    79,    80,
+      10,    85,     5,    72,    86,    87,    88,    90,    89,    78,
+      11,    81,    79,    80,    82,     7,    91,    19,    20,    82,
+      21,    22,     6,    27,    28,    14,    33,    19,    58,    59,
+      60,    19,    83,    12,    14,    35,    16,    26,    31,    32,
+      37,    52,    56,    70,    38,    61,    53,    62,    47,    51,
+      48,    57,    73,    74,    78,    75,     0,     0,    84,     0,
+      36,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      40
 };
 
 static const yytype_int8 yycheck[] =
 {
-      51,     7,    55,     8,    13,    36,    18,    13,     3,    21,
-      61,    62,    17,    12,     4,    18,    15,    16,    21,    18,
-       0,    72,    73,    74,    77,    76,    57,    13,    14,    12,
-      16,    17,    15,    16,    21,    22,    10,    11,    17,    21,
-      22,    18,    19,    21,    22,    13,    19,    13,    13,     9,
-      13,    13,     5,    20,     6,    19,    53,    12,    19,    17,
-      19,    17,    19,    13,    18,    -1,    -1,    -1,    -1,    45,
-      -1,    -1,    -1,    24
+      54,    38,    58,     8,     3,    14,    15,     7,    17,    18,
+      14,    65,    66,    18,    14,    13,     5,    19,    16,    17,
+      22,    19,     0,    60,    78,    79,    80,    83,    82,    13,
+      20,    19,    16,    17,    22,    14,    19,    22,    23,    22,
+       9,    10,    18,    11,    12,     4,     5,    22,    23,    19,
+      20,    22,    23,    14,     4,    20,    14,    14,    14,    14,
+      20,    23,     6,    57,    18,    52,    18,    14,    21,    20,
+      36,    20,    20,    19,    13,    18,    -1,    -1,    75,    -1,
+      25,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      32
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,    29,    30,    13,     0,    17,    13,    33,    18,
-      21,    19,    13,    34,     4,    31,    13,    26,    35,    21,
-      22,     9,    32,    36,    38,    13,    10,    11,    24,    25,
-      13,     5,    41,    19,    34,    19,    17,    39,     7,    13,
-      27,    42,    43,    44,    20,    37,    26,    40,    19,    17,
-       8,    17,     6,    19,    41,    22,    18,    19,    13,    13,
-      14,    16,    17,    28,    28,    45,    27,    25,    26,    18,
-      28,    28,    12,    15,    16,    18,    21,    22,    18,    28,
-      28,    28,    28,    25
+       0,     3,    31,    32,    14,     0,    18,    14,    35,    19,
+      22,    20,    14,    36,     4,    33,    14,    27,    37,    22,
+      23,     9,    10,    34,    38,    39,    14,    11,    12,    25,
+      26,    14,    14,     5,    42,    20,    36,    20,    18,    40,
+      40,     7,    14,    28,    30,    43,    44,    21,    42,    27,
+      41,    20,    23,    18,     8,    18,     6,    20,    23,    19,
+      20,    25,    14,    14,    15,    17,    18,    29,    29,    45,
+      28,    26,    27,    20,    19,    18,    29,    29,    13,    16,
+      17,    19,    22,    23,    45,    19,    29,    29,    29,    29,
+      26,    19
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    23,    29,    31,    32,    30,    33,    33,    26,    26,
-      34,    34,    25,    24,    24,    35,    35,    37,    36,    38,
-      39,    39,    40,    40,    41,    42,    42,    43,    43,    27,
-      27,    27,    44,    44,    45,    45,    28,    28,    28,    28,
-      28,    28,    28
+       0,    24,    31,    33,    34,    32,    35,    35,    27,    27,
+      36,    36,    26,    25,    25,    37,    37,    38,    39,    39,
+      40,    40,    41,    41,    42,    43,    43,    44,    44,    28,
+      28,    28,    30,    30,    45,    45,    29,    29,    29,    29,
+      29,    29,    29,    29
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     1,     0,     0,    12,     1,     3,     1,     3,
-       6,     0,     1,     1,     1,     3,     0,     0,     4,     4,
+       6,     0,     1,     1,     1,     3,     0,     3,     4,     6,
        3,     0,     3,     5,     3,     1,     0,     1,     3,     3,
        4,     1,     1,     4,     1,     3,     3,     3,     3,     2,
-       3,     1,     1
+       3,     4,     1,     1
 };
 
 
@@ -1375,13 +1384,13 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 40 "parser.y"
+#line 41 "parser.y"
                {SYMTABLE.print_table();}
-#line 1381 "parser.cpp"
+#line 1390 "parser.cpp"
     break;
 
   case 3:
-#line 43 "parser.y"
+#line 44 "parser.y"
                        {
                        actual_scope = Scope::LOCAL; //dla subprogramow
                        printf("\njump.i #lab0\n");
@@ -1389,42 +1398,42 @@ yyreduce:
                       //  for(int i = 0; i<SYMTABLE.global_variables_memory.size();i++)
                       //   {cout << "wpisano " + SYMTABLE.global_variables_memory[i].name << endl;}
                        }
-#line 1393 "parser.cpp"
+#line 1402 "parser.cpp"
     break;
 
   case 4:
-#line 50 "parser.y"
+#line 51 "parser.y"
                                 {
                                 actual_scope = Scope::GLOBAL; //po wyjsciu z subprogramow
                                 cout << "lab0:" << endl;
                                 }
-#line 1402 "parser.cpp"
+#line 1411 "parser.cpp"
     break;
 
   case 5:
-#line 55 "parser.y"
+#line 56 "parser.y"
             {
             cout << codeStream.str();
             codeStream.str("");
             printf("exit\n\n\n");
             }
-#line 1412 "parser.cpp"
+#line 1421 "parser.cpp"
     break;
 
   case 8:
-#line 63 "parser.y"
+#line 64 "parser.y"
                     {id_vector.push_back((yyvsp[0].index));}
-#line 1418 "parser.cpp"
+#line 1427 "parser.cpp"
     break;
 
   case 9:
-#line 64 "parser.y"
+#line 65 "parser.y"
                                         {id_vector.push_back((yyvsp[0].index));}
-#line 1424 "parser.cpp"
+#line 1433 "parser.cpp"
     break;
 
   case 10:
-#line 66 "parser.y"
+#line 67 "parser.y"
                                                               {
                                                               for(int i=0; i< (int) id_vector.size(); i++)
                                                               {
@@ -1454,36 +1463,29 @@ yyreduce:
                                                               }
                                                               id_vector.clear();
                                                               }
-#line 1458 "parser.cpp"
+#line 1467 "parser.cpp"
     break;
 
   case 12:
-#line 97 "parser.y"
+#line 98 "parser.y"
                     {(yyval.variable_type) = (yyvsp[0].variable_type);}
-#line 1464 "parser.cpp"
+#line 1473 "parser.cpp"
     break;
 
   case 13:
-#line 99 "parser.y"
+#line 100 "parser.y"
                          {(yyval.variable_type) = VarType::INTEGER;}
-#line 1470 "parser.cpp"
+#line 1479 "parser.cpp"
     break;
 
   case 14:
-#line 100 "parser.y"
+#line 101 "parser.y"
                       {(yyval.variable_type) = VarType::REAL;}
-#line 1476 "parser.cpp"
+#line 1485 "parser.cpp"
     break;
 
   case 17:
-#line 112 "parser.y"
-                                     {
-                                     }
-#line 1483 "parser.cpp"
-    break;
-
-  case 18:
-#line 114 "parser.y"
+#line 119 "parser.y"
                                           {
                                           cout << "enter.i #" + to_string(-1*SYMTABLE.next_local_address) << endl; //negujemy. bo next_local idzie w dol
                                           cout << codeStream.str();
@@ -1512,18 +1514,18 @@ yyreduce:
                                             }
                                           }
                                           }
-#line 1516 "parser.cpp"
+#line 1518 "parser.cpp"
     break;
 
-  case 19:
-#line 143 "parser.y"
+  case 18:
+#line 148 "parser.y"
                                              {
                                              SYMTABLE.table[(yyvsp[-2].index)].input_type = InputType::PROCEDURE;
                                              cout << SYMTABLE.table[(yyvsp[-2].index)].name + ":" <<endl; //etykieta procedury
 
                                              SYMTABLE.next_parameter_address = (int) parameter_vector.size()*4 + 4; //BP+4 dla adresu powrotu, w odwrotnej kolejnosci na stosie
                                              //cout << SYMTABLE.next_parameter_address << endl;
-                                             for (int i = 0; i< (int) parameter_vector.size(); i++)
+                                             for (int i = 0; i< parameter_vector.size(); i++) //petla adresujaca adresy pushniete
                                              {
                                                SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
                                                SYMTABLE.next_parameter_address -= 4;
@@ -1534,11 +1536,33 @@ yyreduce:
                                              parameter_vector.clear();
                                              id_vector.clear();
                                              }
-#line 1538 "parser.cpp"
+#line 1540 "parser.cpp"
+    break;
+
+  case 19:
+#line 166 "parser.y"
+                                                              {
+                                                              SYMTABLE.table[(yyvsp[-4].index)].input_type = InputType::FUNCTION;
+                                                              SYMTABLE.table[(yyvsp[-4].index)].vartype = (yyvsp[-1].variable_type); //typ zwracany przez funkcje
+                                                              cout << SYMTABLE.table[(yyvsp[-4].index)].name + ":" <<endl; //etykieta funkcji
+                                                              SYMTABLE.next_parameter_address = parameter_vector.size()*4 + 8; //BP+8, dla adresu zmiennej tymczasowej wyniku funkcji
+                                                              for (int i = 0; i< parameter_vector.size(); i++) //petla adresujaca adresy pushniete
+                                                              {
+                                                                SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
+                                                                SYMTABLE.next_parameter_address -= 4;
+                                                                SYMTABLE.table[(yyvsp[-4].index)].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
+                                                              }
+                                                              //cout << to_string(parameter_vector.size()) << endl;
+                                                              SYMTABLE.next_parameter_address = 0;
+                                                              SYMTABLE.table[(yyvsp[-4].index)].address = 8; //przypisujemy adres powrotu do funkcji
+                                                              parameter_vector.clear();
+                                                              id_vector.clear();
+                                                              }
+#line 1562 "parser.cpp"
     break;
 
   case 22:
-#line 164 "parser.y"
+#line 187 "parser.y"
                                           {
                                           for(int i=0; i< (int) id_vector.size(); i++)
                                           {
@@ -1548,11 +1572,11 @@ yyreduce:
                                           }
                                           id_vector.clear(); //potrzeba czyszczenia po, dlatego dodatkowy wektor ktory sumuje dla parametrow lokalnych
                                           }
-#line 1552 "parser.cpp"
+#line 1576 "parser.cpp"
     break;
 
   case 23:
-#line 174 "parser.y"
+#line 197 "parser.y"
                                                             {
                                                             for(int i=0; i< (int) id_vector.size(); i++)
                                                             {
@@ -1562,11 +1586,11 @@ yyreduce:
                                                             }
                                                             id_vector.clear();
                                                             }
-#line 1566 "parser.cpp"
+#line 1590 "parser.cpp"
     break;
 
   case 29:
-#line 201 "parser.y"
+#line 226 "parser.y"
                                   {
                                   if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype) //jezeli sa roznego typu
                                   {
@@ -1591,28 +1615,48 @@ yyreduce:
                                   SYMTABLE.table[(yyvsp[-2].index)].value = SYMTABLE.table[(yyvsp[0].index)].value; //przypisz wartosc do id
                                   gencode("mov", (yyvsp[0].index), (yyvsp[-2].index), -1);
                                   }
-#line 1595 "parser.cpp"
+#line 1619 "parser.cpp"
     break;
 
   case 30:
-#line 225 "parser.y"
+#line 250 "parser.y"
                                {
                                 gencode("write", (yyvsp[-1].index), -1, -1);
                                }
-#line 1603 "parser.cpp"
+#line 1627 "parser.cpp"
     break;
 
   case 32:
-#line 236 "parser.y"
-                        {codeStream << "call.i #" + SYMTABLE.table[(yyvsp[0].index)].name << endl;}
-#line 1609 "parser.cpp"
+#line 261 "parser.y"
+                        {
+                        if(SYMTABLE.table[(yyvsp[0].index)].input_type == InputType::PROCEDURE) //wywolanie procedury bez parametrow
+                          codeStream << "call.i #" + SYMTABLE.table[(yyvsp[0].index)].name << endl;
+                        else
+                        {
+                          cout << "imhere" << endl;
+                          int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[(yyvsp[0].index)].vartype);
+                          codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl;
+                          codeStream << "call.i #" + SYMTABLE.table[(yyvsp[0].index)].name << endl;
+                        }
+                        }
+#line 1643 "parser.cpp"
     break;
 
   case 33:
-#line 238 "parser.y"
+#line 273 "parser.y"
                                                 {
-                                                for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow
+                                                for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow oraz sprawdzanie ich typow
                                                 {
+                                                  if(SYMTABLE.table[parameter_vector[i]].input_type == InputType::NUMBER) //jezeli parametrem jest czyta liczba
+                                                  {
+                                                    int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i]); //stworz zmienna ktora przechowa
+                                                    if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::REAL && SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i] == VarType::INTEGER)
+                                                      parameter_vector[i] = SYMTABLE.insert_to_table(to_string((int)stof(SYMTABLE.table[parameter_vector[i]].name)), InputType::NUMBER, SYMTABLE.table[parameter_vector[i]].vartype);
+                                                    if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::INTEGER)
+                                                      SYMTABLE.table[parameter_vector[i]].vartype = VarType::REAL;
+                                                    gencode("mov", parameter_vector[i], newtemp, -1); //nowa cyfra do zmiennej tymczasowej
+                                                    parameter_vector[i] = newtemp; //zamien adresy
+                                                  }
                                                   if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i]) //jezeli sa takiego samego typu
                                                     codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl; //pushuj bezposrednio ten adres
                                                   else
@@ -1625,23 +1669,25 @@ yyreduce:
                                                 codeStream << "incsp.i #" + to_string(parameter_vector.size()*4) << endl; //podnosimy ze stosu tyle ile push 
                                                 parameter_vector.clear();
                                                 }
-#line 1629 "parser.cpp"
+#line 1673 "parser.cpp"
     break;
 
   case 34:
-#line 254 "parser.y"
-                            {parameter_vector.push_back((yyvsp[0].index));}
-#line 1635 "parser.cpp"
+#line 299 "parser.y"
+                            {
+                            parameter_vector.push_back((yyvsp[0].index)); //zbiera indeksy parametrow
+                            }
+#line 1681 "parser.cpp"
     break;
 
   case 35:
-#line 255 "parser.y"
+#line 302 "parser.y"
                                                 {parameter_vector.push_back((yyvsp[0].index));}
-#line 1641 "parser.cpp"
+#line 1687 "parser.cpp"
     break;
 
   case 36:
-#line 265 "parser.y"
+#line 312 "parser.y"
                                       {
                                       if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype) //jezeli sa roznego typu
                                       {
@@ -1653,11 +1699,11 @@ yyreduce:
                                       (yyval.index) = newtemp; //przekaz dalej indeks wyniku
                                       gencode("add", (yyvsp[-2].index), (yyvsp[0].index), newtemp);
                                       }
-#line 1657 "parser.cpp"
+#line 1703 "parser.cpp"
     break;
 
   case 37:
-#line 277 "parser.y"
+#line 324 "parser.y"
                                       {
                                       if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype)
                                       {
@@ -1669,11 +1715,11 @@ yyreduce:
                                       (yyval.index) = newtemp;
                                       gencode("sub", (yyvsp[-2].index), (yyvsp[0].index), newtemp);
                                       }
-#line 1673 "parser.cpp"
+#line 1719 "parser.cpp"
     break;
 
   case 38:
-#line 289 "parser.y"
+#line 336 "parser.y"
                                          {
                                          if(SYMTABLE.table[(yyvsp[-2].index)].vartype != SYMTABLE.table[(yyvsp[0].index)].vartype)
                                          {
@@ -1703,40 +1749,90 @@ yyreduce:
                                           gencode("mod", (yyvsp[-2].index), (yyvsp[0].index), newtemp);
                                          }
                                          }
-#line 1707 "parser.cpp"
+#line 1753 "parser.cpp"
     break;
 
   case 39:
-#line 319 "parser.y"
+#line 366 "parser.y"
                            {
                            int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::NONE);
                            //SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            (yyval.index) = newtemp;
                            gencode("negation", 0, (yyvsp[0].index), newtemp);
                            }
-#line 1718 "parser.cpp"
+#line 1764 "parser.cpp"
     break;
 
   case 40:
-#line 326 "parser.y"
+#line 373 "parser.y"
                                {(yyval.index) = (yyvsp[-1].index);}
-#line 1724 "parser.cpp"
+#line 1770 "parser.cpp"
     break;
 
   case 41:
-#line 327 "parser.y"
-               {(yyval.index) = (yyvsp[0].index);}
-#line 1730 "parser.cpp"
+#line 374 "parser.y"
+                                       {
+                                        for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow
+                                        {
+                                          if(SYMTABLE.table[parameter_vector[i]].input_type == InputType::NUMBER) //jezeli parametrem jest czyta liczba
+                                          {
+                                            int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i]); //stworz zmienna ktora przechowa
+                                            if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::REAL && SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i] == VarType::INTEGER)
+                                              parameter_vector[i] = SYMTABLE.insert_to_table(to_string((int)stof(SYMTABLE.table[parameter_vector[i]].name)), InputType::NUMBER, SYMTABLE.table[parameter_vector[i]].vartype);
+                                            if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::INTEGER)
+                                              SYMTABLE.table[parameter_vector[i]].vartype = VarType::REAL;
+                                            gencode("mov", parameter_vector[i], newtemp, -1); //nowa cyfra do zmiennej tymczasowej
+                                            parameter_vector[i] = newtemp; //zamien adresy
+                                          }
+                                          if(SYMTABLE.table[parameter_vector[i]].vartype == SYMTABLE.table[(yyvsp[-3].index)].vartype_vector[i]) //jezeli sa takiego samego typu
+                                            codeStream << "push.i #" + to_string(SYMTABLE.table[parameter_vector[i]].address) << endl; //pushuj bezposrednio ten adres
+                                          else
+                                          {
+                                            int newtemp = type_conversion(parameter_vector[i]); //jezeli sa innego typu, to najpierw trzeba konwersje i push nowego
+                                            codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl;
+                                          }
+                                        }
+                                        int newtemp = 0;
+                                        if(SYMTABLE.table[(yyvsp[-3].index)].input_type == InputType::FUNCTION) //jezeli jest funkcja do dostosuj zmienna zwracajaca do typu funkcji
+                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[(yyvsp[-3].index)].vartype); //nowa zmienna wynika z typu funkcji
+                                        else
+                                          newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL); //dla procedur zawsze real
+                                        codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl; //pushujemy ta zmienna
+                                        codeStream << "call.i #" + SYMTABLE.table[(yyvsp[-3].index)].name << endl; //wywolanie funkcji
+                                        codeStream << "incsp.i #" + to_string(parameter_vector.size()*4 + 4) << endl; //podnosimy ze stosu tyle ile push + 4 dla wyniku
+                                        SYMTABLE.table[(yyvsp[-3].index)].address = SYMTABLE.table[newtemp].address; //przypisujemy tej funkcji adres wyniku
+                                        SYMTABLE.table[(yyvsp[-3].index)].vartype = SYMTABLE.table[newtemp].vartype; //i typ wyniku
+                                        parameter_vector.clear();
+                                        (yyval.index) = (yyvsp[-3].index);
+                                       }
+#line 1809 "parser.cpp"
     break;
 
   case 42:
-#line 328 "parser.y"
+#line 408 "parser.y"
+                {
+                if(SYMTABLE.table[(yyvsp[0].index)].input_type == InputType::FUNCTION)
+                {
+                  int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[(yyvsp[0].index)].vartype); //nowa zmienna wynika z typu funkcji
+                  codeStream << "push.i #" + to_string(SYMTABLE.table[newtemp].address) << endl; //pushujemy ta zmienna
+                  codeStream << "call.i #" + SYMTABLE.table[(yyvsp[0].index)].name << endl; //wywolanie funkcji
+                  codeStream << "incsp.i #4" << endl;
+                  SYMTABLE.table[(yyvsp[0].index)].address = SYMTABLE.table[newtemp].address; //przypisujemy tej funkcji adres wyniku
+                  SYMTABLE.table[(yyvsp[0].index)].vartype = SYMTABLE.table[newtemp].vartype; //i typ wyniku
+                }
+                (yyval.index) = (yyvsp[0].index);
+                }
+#line 1826 "parser.cpp"
+    break;
+
+  case 43:
+#line 420 "parser.y"
                 {(yyval.index) = (yyvsp[0].index);}
-#line 1736 "parser.cpp"
+#line 1832 "parser.cpp"
     break;
 
 
-#line 1740 "parser.cpp"
+#line 1836 "parser.cpp"
 
       default: break;
     }
@@ -1968,7 +2064,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 330 "parser.y"
+#line 422 "parser.y"
 
 
 

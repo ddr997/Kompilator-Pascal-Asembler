@@ -1,16 +1,16 @@
-program examp(input, output);
-var x, y,b: integer;
-var z,c: real;
+program example(input, output);
+var x, y: integer;
+var g,h:real;
 
-procedure p(a,x:integer;b,c:real);
-var b: real;
-var x: integer;
+function f(a, b: real):real;
+var q:integer;
 begin
-b := 5 + 12.5 div 2 mod 10
+   q:=4;
+   f:=a+b+q
 end;
 
+
 begin
-  b:=x+1;
-  p(x,y,z,x);
-  write(b)
+  g:=3.25;
+  write(f(g,10.28))
 end.

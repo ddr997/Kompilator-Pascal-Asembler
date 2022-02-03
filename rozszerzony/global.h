@@ -13,7 +13,7 @@ int expression_result_temp_gen(int, int);
 void yyerror(char const *);
 void gencode(string, int, int, int);
 enum class VarType {NONE = -1, INTEGER = 0, REAL = 1};
-enum class InputType {NONE = -1, IDENTIFIER = 0, NUMBER = 1, TEMPORARY = 2, TEMPORARY_LOCAL = 3, PROCEDURE = 4};
+enum class InputType {NONE = -1, IDENTIFIER = 0, NUMBER = 1, TEMPORARY = 2, TEMPORARY_LOCAL = 3, PROCEDURE = 4, FUNCTION = 5};
 enum class Scope {GLOBAL = 0, LOCAL = 1};
 struct Record{
     string name;

@@ -24,7 +24,7 @@ real	        {return T_REAL;}
 ":="            {return T_ASSIGN;}
 
 procedure       {return T_PROCEDURE;}
-
+function        {return T_FUNCTION;}
                    
 "/"|div         {
                 yylval.operation = '/';

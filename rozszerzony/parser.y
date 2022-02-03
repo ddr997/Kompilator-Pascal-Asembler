@@ -32,7 +32,7 @@ stringstream codeStream; //stringstream do wypisywania kodu
 %token <index> ID
 %token <index> NUM
 %nterm <variable_type> standard_type type
-%nterm <index> identifier_list statement expression procedure_statement
+%nterm <index> identifier_list statement expression procedure_statement expression_list
 %left '+' '-'
 %left T_MULOP
 
@@ -247,7 +247,8 @@ statement: ID T_ASSIGN expression {
                                   SYMTABLE.table[$1].value = SYMTABLE.table[$3].value; //przypisz wartosc do id
                                   gencode("mov", $3, $1, -1);
                                   }
-          | T_WRITE '(' ID ')' {
+
+          | T_WRITE '(' expression_list ')' {
                                 gencode("write", $3, -1, -1);
                                }
           
@@ -298,6 +299,7 @@ procedure_statement: ID {
 
 expression_list: expression {
                             parameter_vector.push_back($1); //zbiera indeksy parametrow
+                            $$ = $1; //do write'a
                             }
                | expression_list ',' expression {parameter_vector.push_back($3);} //to samo
 

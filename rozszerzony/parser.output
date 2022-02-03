@@ -47,7 +47,7 @@ Grammar
    27               | statement_list ';' statement
 
    28 statement: ID T_ASSIGN expression
-   29          | T_WRITE '(' ID ')'
+   29          | T_WRITE '(' expression_list ')'
    30          | procedure_statement
 
    31 procedure_statement: ID
@@ -89,7 +89,7 @@ Terminals, with rules where they appear
     T_INTEGER <variable_type> (266) 12
     T_REAL <variable_type> (267) 13
     T_MULOP <operation> (268) 37
-    ID <index> (269) 4 5 6 7 8 17 18 28 29 31 32 40 41
+    ID <index> (269) 4 5 6 7 8 17 18 28 31 32 40 41
     NUM <index> (270) 42
 
 
@@ -115,51 +115,51 @@ Nonterminals, with rules where they appear
     procedure_statement <index> (30)
         on left: 31 32
         on right: 30
-    start (31)
+    expression_list <index> (31)
+        on left: 33 34
+        on right: 29 32 34 40
+    start (32)
         on left: 1
         on right: 0
-    program (32)
+    program (33)
         on left: 4
         on right: 1
-    $@1 (33)
+    $@1 (34)
         on left: 2
         on right: 4
-    $@2 (34)
+    $@2 (35)
         on left: 3
         on right: 4
-    program_identifier_list (35)
+    program_identifier_list (36)
         on left: 5 6
         on right: 4 6
-    declarations (36)
+    declarations (37)
         on left: 9 10
         on right: 4 9 16
-    subprogram_declarations (37)
+    subprogram_declarations (38)
         on left: 14 15
         on right: 4 14
-    subprogram_declaration (38)
+    subprogram_declaration (39)
         on left: 16
         on right: 14
-    subprogram_head (39)
+    subprogram_head (40)
         on left: 17 18
         on right: 16
-    arguments (40)
+    arguments (41)
         on left: 19 20
         on right: 17 18
-    parameter_list (41)
+    parameter_list (42)
         on left: 21 22
         on right: 19 22
-    compound_statement (42)
+    compound_statement (43)
         on left: 23
         on right: 4 16
-    optional_statements (43)
+    optional_statements (44)
         on left: 24 25
         on right: 23
-    statement_list (44)
+    statement_list (45)
         on left: 26 27
         on right: 24 27
-    expression_list (45)
-        on left: 33 34
-        on right: 32 34 40
 
 
 State 0
@@ -510,7 +510,7 @@ State 40
 
 State 41
 
-   29 statement: T_WRITE . '(' ID ')'
+   29 statement: T_WRITE . '(' expression_list ')'
 
     '('  shift, and go to state 53
 
@@ -609,33 +609,39 @@ State 52
 
 State 53
 
-   29 statement: T_WRITE '(' . ID ')'
+   29 statement: T_WRITE '(' . expression_list ')'
 
-    ID  shift, and go to state 62
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
+
+    expression       go to state 66
+    expression_list  go to state 67
 
 
 State 54
 
    28 statement: ID T_ASSIGN . expression
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
 
-    expression  go to state 67
+    expression  go to state 68
 
 
 State 55
 
    32 procedure_statement: ID '(' . expression_list ')'
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
 
-    expression       go to state 68
+    expression       go to state 66
     expression_list  go to state 69
 
 
@@ -693,78 +699,80 @@ State 61
 
 State 62
 
-   29 statement: T_WRITE '(' ID . ')'
-
-    ')'  shift, and go to state 74
-
-
-State 63
-
    40 expression: ID . '(' expression_list ')'
    41           | ID .
 
-    '('  shift, and go to state 75
+    '('  shift, and go to state 74
 
     $default  reduce using rule 41 (expression)
 
 
-State 64
+State 63
 
    42 expression: NUM .
 
     $default  reduce using rule 42 (expression)
 
 
-State 65
+State 64
 
    38 expression: '-' . expression
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
+
+    expression  go to state 75
+
+
+State 65
+
+   39 expression: '(' . expression ')'
+
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
 
     expression  go to state 76
 
 
 State 66
 
-   39 expression: '(' . expression ')'
+   33 expression_list: expression .
+   35 expression: expression . '+' expression
+   36           | expression . '-' expression
+   37           | expression . T_MULOP expression
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    T_MULOP  shift, and go to state 77
+    '+'      shift, and go to state 78
+    '-'      shift, and go to state 79
 
-    expression  go to state 77
+    $default  reduce using rule 33 (expression_list)
 
 
 State 67
+
+   29 statement: T_WRITE '(' expression_list . ')'
+   34 expression_list: expression_list . ',' expression
+
+    ')'  shift, and go to state 80
+    ','  shift, and go to state 81
+
+
+State 68
 
    28 statement: ID T_ASSIGN expression .
    35 expression: expression . '+' expression
    36           | expression . '-' expression
    37           | expression . T_MULOP expression
 
-    T_MULOP  shift, and go to state 78
-    '+'      shift, and go to state 79
-    '-'      shift, and go to state 80
+    T_MULOP  shift, and go to state 77
+    '+'      shift, and go to state 78
+    '-'      shift, and go to state 79
 
     $default  reduce using rule 28 (statement)
-
-
-State 68
-
-   33 expression_list: expression .
-   35 expression: expression . '+' expression
-   36           | expression . '-' expression
-   37           | expression . T_MULOP expression
-
-    T_MULOP  shift, and go to state 78
-    '+'      shift, and go to state 79
-    '-'      shift, and go to state 80
-
-    $default  reduce using rule 33 (expression_list)
 
 
 State 69
@@ -772,8 +780,8 @@ State 69
    32 procedure_statement: ID '(' expression_list . ')'
    34 expression_list: expression_list . ',' expression
 
-    ')'  shift, and go to state 81
-    ','  shift, and go to state 82
+    ')'  shift, and go to state 82
+    ','  shift, and go to state 81
 
 
 State 70
@@ -808,22 +816,27 @@ State 73
 
 State 74
 
-   29 statement: T_WRITE '(' ID ')' .
+   40 expression: ID '(' . expression_list ')'
 
-    $default  reduce using rule 29 (statement)
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
+
+    expression       go to state 66
+    expression_list  go to state 84
 
 
 State 75
 
-   40 expression: ID '(' . expression_list ')'
+   35 expression: expression . '+' expression
+   36           | expression . '-' expression
+   37           | expression . T_MULOP expression
+   38           | '-' expression .
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    T_MULOP  shift, and go to state 77
 
-    expression       go to state 68
-    expression_list  go to state 84
+    $default  reduce using rule 38 (expression)
 
 
 State 76
@@ -831,79 +844,74 @@ State 76
    35 expression: expression . '+' expression
    36           | expression . '-' expression
    37           | expression . T_MULOP expression
-   38           | '-' expression .
+   39           | '(' expression . ')'
 
-    T_MULOP  shift, and go to state 78
-
-    $default  reduce using rule 38 (expression)
+    T_MULOP  shift, and go to state 77
+    '+'      shift, and go to state 78
+    '-'      shift, and go to state 79
+    ')'      shift, and go to state 85
 
 
 State 77
 
-   35 expression: expression . '+' expression
-   36           | expression . '-' expression
-   37           | expression . T_MULOP expression
-   39           | '(' expression . ')'
-
-    T_MULOP  shift, and go to state 78
-    '+'      shift, and go to state 79
-    '-'      shift, and go to state 80
-    ')'      shift, and go to state 85
-
-
-State 78
-
    37 expression: expression T_MULOP . expression
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
 
     expression  go to state 86
 
 
-State 79
+State 78
 
    35 expression: expression '+' . expression
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
 
     expression  go to state 87
 
 
-State 80
+State 79
 
    36 expression: expression '-' . expression
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
 
     expression  go to state 88
 
 
+State 80
+
+   29 statement: T_WRITE '(' expression_list ')' .
+
+    $default  reduce using rule 29 (statement)
+
+
 State 81
 
-   32 procedure_statement: ID '(' expression_list ')' .
+   34 expression_list: expression_list ',' . expression
 
-    $default  reduce using rule 32 (procedure_statement)
+    ID   shift, and go to state 62
+    NUM  shift, and go to state 63
+    '-'  shift, and go to state 64
+    '('  shift, and go to state 65
+
+    expression  go to state 89
 
 
 State 82
 
-   34 expression_list: expression_list ',' . expression
+   32 procedure_statement: ID '(' expression_list ')' .
 
-    ID   shift, and go to state 63
-    NUM  shift, and go to state 64
-    '-'  shift, and go to state 65
-    '('  shift, and go to state 66
-
-    expression  go to state 89
+    $default  reduce using rule 32 (procedure_statement)
 
 
 State 83
@@ -923,7 +931,7 @@ State 84
    40 expression: ID '(' expression_list . ')'
 
     ')'  shift, and go to state 91
-    ','  shift, and go to state 82
+    ','  shift, and go to state 81
 
 
 State 85
@@ -950,7 +958,7 @@ State 87
    36           | expression . '-' expression
    37           | expression . T_MULOP expression
 
-    T_MULOP  shift, and go to state 78
+    T_MULOP  shift, and go to state 77
 
     $default  reduce using rule 35 (expression)
 
@@ -962,7 +970,7 @@ State 88
    36           | expression '-' expression .
    37           | expression . T_MULOP expression
 
-    T_MULOP  shift, and go to state 78
+    T_MULOP  shift, and go to state 77
 
     $default  reduce using rule 36 (expression)
 
@@ -974,9 +982,9 @@ State 89
    36           | expression . '-' expression
    37           | expression . T_MULOP expression
 
-    T_MULOP  shift, and go to state 78
-    '+'      shift, and go to state 79
-    '-'      shift, and go to state 80
+    T_MULOP  shift, and go to state 77
+    '+'      shift, and go to state 78
+    '-'      shift, and go to state 79
 
     $default  reduce using rule 34 (expression_list)
 

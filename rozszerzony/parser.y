@@ -11,6 +11,7 @@ stringstream codeStream; //stringstream do wypisywania kodu
 
 int relop_true, relop_false = 0;
 int labCounter = 0;
+int while_entry_label, relop_counter = 0;
 
 %}
 
@@ -36,16 +37,22 @@ int labCounter = 0;
 %token T_ELSE
 %token <relop> T_RELOP
 
+%token T_WHILE
+%token T_DO
+%token T_NOT
+
 %token <variable_type> T_INTEGER
 %token <variable_type> T_REAL
 %token <operation> T_MULOP
 %token <index> ID
 %token <index> NUM
 %nterm <variable_type> standard_type type
-%nterm <index> identifier_list expression statement procedure_statement expression_list 
-%left T_RELOP
-%left '+' '-'
+%nterm <index> identifier_list expression statement procedure_statement expression_list
 %left T_MULOP
+%left '+' '-'
+%left T_RELOP
+%left T_NOT
+
 
 
 %%
@@ -266,6 +273,8 @@ statement: ID T_ASSIGN expression {
           
           | procedure_statement
 
+
+
           | T_IF {
                   relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
                   relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
@@ -275,10 +284,38 @@ statement: ID T_ASSIGN expression {
                    gencode("je", $3, relop_false, JUMP);
                    }
             statement {codeStream << "jump.i #lab" + to_string(labCounter+1) << endl;}//tutaj musi byc jump;
-            T_ELSE {codeStream << "lab" + to_string(labCounter) + ":" << endl; labCounter += 1;}
-            statement {codeStream << "lab" + to_string(labCounter) + ":" << endl;}
+            T_ELSE {
+                   codeStream << "lab" + to_string(labCounter) + ":" << endl;
+                   labCounter += 1;
+                   }
+            statement {
+                      codeStream << "lab" + to_string(labCounter) + ":" << endl;
+                      labCounter += 1;
+                      //codeStream << "nastepny wolny: " + to_string(labCounter) << endl;
+                      }
 
 
+
+          | T_WHILE{
+                    while_entry_label = labCounter;
+                    relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
+                    relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
+                    codeStream << "lab" + to_string(labCounter+1) + ":" << endl; //label sprawdzajacy 1 wyzej od wejsciowego
+                    labCounter += 2; //z 1 do 3
+                   }
+            expression
+            T_DO  {labCounter -= 2*relop_counter; //expression zwieksza o 2*relop_counter petle, wiec musimy sie confac o ilosc expression *2
+                  //codeStream << "zmniejsza o: " + to_string(labCounter) << endl;
+                  labCounter = while_entry_label;
+                  gencode("je", $3, relop_false, JUMP); 
+                  }
+            statement {
+                      codeStream << "jump.i #lab" + to_string(while_entry_label+1) << endl;
+                      codeStream << "lab" + to_string(while_entry_label) + ":" << endl;
+                      labCounter += 2*relop_counter + 2;
+                      //codeStream << "nastepy wolny label: " + to_string(labCounter) << endl;
+                      relop_counter = 0;
+                      }
 
 
 
@@ -460,21 +497,43 @@ expression: expression '+' expression {
 
           | expression T_RELOP expression {
                                           //codeStream << "lab" + to_string(labCounter) + ":" << endl;
-                                          gencode($2,$1,$3,JUMP); //instrukcja relop
+                                          gencode($2,$1,$3,JUMP); //instrukcja relop + wariant false
                                           int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //przechowuje true albo False
                                           gencode("mov", relop_false, newtemp, -1);
-                                          codeStream << "jump.i #lab" + to_string(labCounter+1) << endl;
+                                          codeStream << "jump.i #lab" + to_string(labCounter+1) << endl; // aktualnie 1 + 1
 
                                           //wariant true
-                                          codeStream << "lab" + to_string(labCounter) + ":" << endl;
+                                          codeStream << "lab" + to_string(labCounter) + ":" << endl; //1
                                           gencode("mov", relop_true, newtemp, -1);
-                                          labCounter += 1;
+                                          labCounter += 1; //zwiekszamy do 2
 
-                                          codeStream << "lab" + to_string(labCounter) + ":" << endl;
-                                          labCounter += 1;
+                                          //zwiekszamy tutaj dla wiekszej ilosci relopow
+                                          codeStream << "lab" + to_string(labCounter) + ":" << endl; //printujemy 2
+                                          labCounter += 1; //zwiekszamy do 3
+                                          
+                                          relop_counter += 1;
                                           $$ = newtemp;
                                           }
 
+
+          | T_NOT expression  { //trzeba na koncu przesunac o 2 w tyl
+                              gencode("je", $2, relop_false, JUMP);
+                              int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //przechowuje true albo False
+                              gencode("mov", relop_false, newtemp, -1);
+                              codeStream << "jump.i #lab" + to_string(labCounter+1) << endl; // aktualnie 1 + 1
+
+                              //wariant true
+                              codeStream << "lab" + to_string(labCounter) + ":" << endl; //1
+                              gencode("mov", relop_true, newtemp, -1);
+                              labCounter += 1; //zwiekszamy do 2
+
+                              //zwiekszamy tutaj dla wiekszej ilosci relopow
+                              codeStream << "lab" + to_string(labCounter) + ":" << endl; //printujemy 2
+                              labCounter += 1; //zwiekszamy do 3
+
+                              relop_counter += 1;
+                              $$ = newtemp;
+                              }
 %%
 
 

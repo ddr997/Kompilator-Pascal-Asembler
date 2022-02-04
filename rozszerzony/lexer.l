@@ -56,11 +56,16 @@ and             {
                 yylval.operation = '&';
                 return T_MULOP;
                 }
-                
+
 or              {
                 yylval.operation = '|';
                 return T_MULOP;
                 }
+
+not             {return T_NOT;}
+
+while           {return T_WHILE;}
+do              {return T_DO;}
 
 {NUM}           {
                 int check_if_exists = SYMTABLE.find_in_table(yytext);

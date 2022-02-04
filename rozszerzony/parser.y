@@ -1,6 +1,7 @@
 %{
 #include "global.h"
 #define YYERROR_VERBOSE 1
+#define JUMP -99
 Symtable SYMTABLE;
 vector <int> id_vector; //sluzy do przypisywania typow przy deklaracji
 vector <int> parameter_vector; //wektor parametrow procedury/funkcji
@@ -8,12 +9,16 @@ vector <int> parameter_vector; //wektor parametrow procedury/funkcji
 Scope actual_scope = Scope::GLOBAL; //okresla w ktorej czesci gramatyki jestesmy
 stringstream codeStream; //stringstream do wypisywania kodu
 
+int relop_true, relop_false = 0;
+int labCounter = 0;
+
 %}
 
 %union{
   int index;
   char operation;
   VarType variable_type;
+  char* relop;
 }
 
 %token T_PROGRAM
@@ -26,13 +31,19 @@ stringstream codeStream; //stringstream do wypisywania kodu
 %token T_PROCEDURE
 %token T_FUNCTION
 
+%token T_IF
+%token T_THEN
+%token T_ELSE
+%token <relop> T_RELOP
+
 %token <variable_type> T_INTEGER
 %token <variable_type> T_REAL
 %token <operation> T_MULOP
 %token <index> ID
 %token <index> NUM
 %nterm <variable_type> standard_type type
-%nterm <index> identifier_list statement expression procedure_statement expression_list
+%nterm <index> identifier_list expression statement procedure_statement expression_list 
+%left T_RELOP
 %left '+' '-'
 %left T_MULOP
 
@@ -43,14 +54,15 @@ start: program {SYMTABLE.print_table();}
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
          declarations  {
                        actual_scope = Scope::LOCAL; //dla subprogramow
-                       printf("\njump.i #lab0\n");
                        SYMTABLE.global_variables_memory = SYMTABLE.table;
+                       codeStream << "jump.i #lab0" << endl;
+                       labCounter += 1;
                       //  for(int i = 0; i<SYMTABLE.global_variables_memory.size();i++)
                       //   {cout << "wpisano " + SYMTABLE.global_variables_memory[i].name << endl;}
                        }
         subprogram_declarations {
                                 actual_scope = Scope::GLOBAL; //po wyjsciu z subprogramow
-                                cout << "lab0:" << endl;
+                                codeStream << "lab0:" << endl;
                                 }
         compound_statement 
         '.' {
@@ -254,6 +266,17 @@ statement: ID T_ASSIGN expression {
           
           | procedure_statement
 
+          | T_IF {
+                  relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
+                  relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
+                 }
+            expression
+            T_THEN {
+                   gencode("je", $3, relop_false, JUMP);
+                   }
+            statement {codeStream << "jump.i #lab" + to_string(labCounter+1) << endl;}//tutaj musi byc jump;
+            T_ELSE {codeStream << "lab" + to_string(labCounter) + ":" << endl; labCounter += 1;}
+            statement {codeStream << "lab" + to_string(labCounter) + ":" << endl;}
 
 
 
@@ -342,7 +365,7 @@ expression: expression '+' expression {
                                             if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);}
                                          }
                                          int newtemp = expression_result_temp_gen($1, $3);
-
+                                  
                                          if($2 == '*')
                                          {
                                           SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value * SYMTABLE.table[$3].value;
@@ -363,10 +386,23 @@ expression: expression '+' expression {
                                           $$ = newtemp;
                                           gencode("mod", $1, $3, newtemp);
                                          }
+
+                                         if ($2 == '&')
+                                         { 
+                                           gencode("and", $1, $3, newtemp);
+                                           $$ = newtemp;
+                                         }
+
+                                         if ($2 == '|')
+                                         {
+                                           gencode("or", $1, $3, newtemp);
+                                           $$ = newtemp;
+                                         }
+
                                          }
 
           | '-' expression {
-                           int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::NONE);
+                           int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[$2].vartype);
                            //SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            $$ = newtemp;
                            gencode("negation", 0, $2, newtemp);
@@ -419,7 +455,25 @@ expression: expression '+' expression {
                 }
                 $$ = $1;
                 }
+
           | NUM {$$ = $1;}
+
+          | expression T_RELOP expression {
+                                          //codeStream << "lab" + to_string(labCounter) + ":" << endl;
+                                          gencode($2,$1,$3,JUMP); //instrukcja relop
+                                          int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //przechowuje true albo False
+                                          gencode("mov", relop_false, newtemp, -1);
+                                          codeStream << "jump.i #lab" + to_string(labCounter+1) << endl;
+
+                                          //wariant true
+                                          codeStream << "lab" + to_string(labCounter) + ":" << endl;
+                                          gencode("mov", relop_true, newtemp, -1);
+                                          labCounter += 1;
+
+                                          codeStream << "lab" + to_string(labCounter) + ":" << endl;
+                                          labCounter += 1;
+                                          $$ = newtemp;
+                                          }
 
 %%
 
@@ -441,11 +495,14 @@ void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tabl
 {
   string var1 = "", var2 = "", var3 = "";
   if(i1 >= 0)
-  var1 = isdigit(SYMTABLE.table[i1].name[0]) ? "#" + SYMTABLE.table[i1].name : to_string(SYMTABLE.table[i1].address);
+    var1 = isdigit(SYMTABLE.table[i1].name[0]) ? "#" + SYMTABLE.table[i1].name : to_string(SYMTABLE.table[i1].address);
   if(i2 >= 0)
-  var2 = isdigit(SYMTABLE.table[i2].name[0]) ? ",#" + SYMTABLE.table[i2].name : "," + to_string(SYMTABLE.table[i2].address);
-  if(i3 >= 0)
-  var3 = isdigit(SYMTABLE.table[i3].name[0]) ? ",#" + SYMTABLE.table[i3].name : "," + to_string(SYMTABLE.table[i3].address);
+    var2 = isdigit(SYMTABLE.table[i2].name[0]) ? ",#" + SYMTABLE.table[i2].name : "," + to_string(SYMTABLE.table[i2].address);
+  if(i3 == JUMP)
+    {var3 = ",#lab" + to_string(labCounter);}
+  else
+    if(i3 >= 0)
+      var3 = isdigit(SYMTABLE.table[i3].name[0]) ? ",#" + SYMTABLE.table[i3].name : "," + to_string(SYMTABLE.table[i3].address);
   string type_postfix = SYMTABLE.table[i1].vartype == VarType::INTEGER ? ".i " : ".r ";
   ////
   if(actual_scope == Scope::GLOBAL)
@@ -509,6 +566,8 @@ int expression_result_temp_gen(int i1, int i3)
   }
   return newtemp;
 }
+
+
 
 void destroy()
 {

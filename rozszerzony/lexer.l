@@ -25,6 +25,17 @@ real	        {return T_REAL;}
 
 procedure       {return T_PROCEDURE;}
 function        {return T_FUNCTION;}
+
+if                                  {return T_IF;}
+then                                {return T_THEN;}
+else                                {return T_ELSE;}
+"<"			                        {yylval.relop = (char*) "jl"; return T_RELOP;}
+">"			                        {yylval.relop = (char*) "jg"; return T_RELOP;}
+"<="			                    {yylval.relop = (char*) "jle"; return T_RELOP;}
+">="			                    {yylval.relop = (char*) "jge"; return T_RELOP;}
+"="			                        {yylval.relop = (char*) "je"; return T_RELOP;}
+"<>"			                    {yylval.relop = (char*) "jne"; return T_RELOP;}
+
                    
 "/"|div         {
                 yylval.operation = '/';
@@ -38,6 +49,16 @@ function        {return T_FUNCTION;}
 
 mod|"%"         {
                 yylval.operation = 'm';
+                return T_MULOP;
+                }
+
+and             {
+                yylval.operation = '&';
+                return T_MULOP;
+                }
+                
+or              {
+                yylval.operation = '|';
                 return T_MULOP;
                 }
 

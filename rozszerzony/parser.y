@@ -2,6 +2,7 @@
 #include "global.h"
 #define YYERROR_VERBOSE 1
 #define JUMP -99
+extern int yylineno;
 Symtable SYMTABLE;
 vector <int> id_vector; //sluzy do przypisywania typow przy deklaracji
 vector <int> parameter_vector; //wektor parametrow procedury/funkcji
@@ -9,23 +10,23 @@ vector <int> parameter_vector; //wektor parametrow procedury/funkcji
 Scope actual_scope = Scope::GLOBAL; //okresla w ktorej czesci gramatyki jestesmy
 stringstream codeStream; //stringstream do wypisywania kodu
 
-int relop_true, relop_false = 0;
-int labCounter = 0;
-int while_entry_label, relop_counter = 0;
+int relop_true, relop_false = 0; //wpisuje do tablicy 0 i 1
+int labCounter = 0; //zmienna do numerowania labeli
+int while_entry_label, relop_counter = 0; //zmienna przechowujaca wejsciowy label do petli; zmienna liczaca wystepowanie relopow
 
 %}
 
 %union{
-  int index;
-  char operation;
-  VarType variable_type;
-  char* relop;
+  int index; //indeks w tablicy symboli
+  char operation; //arytmetyczne
+  VarType variable_type; //typ zmiennych
+  char* relop; //relacyjne
 }
 
 %token T_PROGRAM
 %token T_VAR
-%token T_BEGIN
-%token T_END
+%token <index> T_BEGIN
+%token <index> T_END
 %token T_WRITE
 %token T_READ
 %token T_ASSIGN
@@ -48,7 +49,7 @@ int while_entry_label, relop_counter = 0;
 %token <index> ID
 %token <index> NUM
 %nterm <variable_type> standard_type type
-%nterm <index> identifier_list expression statement procedure_statement expression_list
+%nterm <index> identifier_list expression statement compound_statement procedure_statement expression_list
 %left '+' '-'
 %left T_MULOP
 %left T_NOT
@@ -61,10 +62,10 @@ start: program {SYMTABLE.print_table();}
 
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
          declarations  {
-                       actual_scope = Scope::LOCAL; //dla subprogramow
+                       actual_scope = Scope::LOCAL; //scope dla funkcji i procedur
                        SYMTABLE.global_variables_memory = SYMTABLE.table;
-                       cout << "\n\tjump.i #lab0" << endl;
-                       labCounter += 1;
+                       cout << "\n\tjump.i #lab0" << endl; 
+                       labCounter += 1; //kolejny label
                        relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
                        relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
                       //  for(int i = 0; i<SYMTABLE.global_variables_memory.size();i++)
@@ -594,7 +595,7 @@ expression: expression '+' expression {
 
 void yyerror(char const *s)
 {
-  printf("%s\n",s);
+  fprintf(stderr,"\x1B[35mLine number %d : \x1B[37m%s\n",yylineno,s);
 };
 
 int main()
@@ -686,3 +687,4 @@ void destroy()
 {
   yylex_destroy();
 }
+

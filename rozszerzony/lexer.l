@@ -4,9 +4,10 @@
 extern Symtable SYMTABLE;
 %}
 
+%option yylineno
 %option noyywrap
 
-IGNORES             [ \t\r\n]+
+IGNORES             [ \t\r]+
 LETTER              [a-zA-z]
 NUM                 [0-9]+
 ID	                {LETTER}({NUM}|{LETTER})*
@@ -14,6 +15,7 @@ OPTIONAL_FRACTION   {NUM}(\.{NUM})?
 
 %%
 {IGNORES}       {}
+\n              {}
 begin           {return T_BEGIN;}
 end             {return T_END;}
 program         {return T_PROGRAM;}

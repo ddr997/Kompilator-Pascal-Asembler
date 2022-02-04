@@ -54,21 +54,22 @@ extern int yydebug;
     T_BEGIN = 260,
     T_END = 261,
     T_WRITE = 262,
-    T_ASSIGN = 263,
-    T_PROCEDURE = 264,
-    T_FUNCTION = 265,
-    T_IF = 266,
-    T_THEN = 267,
-    T_ELSE = 268,
-    T_RELOP = 269,
-    T_WHILE = 270,
-    T_DO = 271,
-    T_NOT = 272,
-    T_INTEGER = 273,
-    T_REAL = 274,
-    T_MULOP = 275,
-    ID = 276,
-    NUM = 277
+    T_READ = 263,
+    T_ASSIGN = 264,
+    T_PROCEDURE = 265,
+    T_FUNCTION = 266,
+    T_IF = 267,
+    T_THEN = 268,
+    T_ELSE = 269,
+    T_RELOP = 270,
+    T_WHILE = 271,
+    T_DO = 272,
+    T_NOT = 273,
+    T_INTEGER = 274,
+    T_REAL = 275,
+    T_MULOP = 276,
+    ID = 277,
+    NUM = 278
   };
 #endif
 
@@ -83,7 +84,7 @@ union YYSTYPE
   VarType variable_type;
   char* relop;
 
-#line 87 "parser.hpp"
+#line 88 "parser.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -18,6 +18,7 @@ begin           {return T_BEGIN;}
 end             {return T_END;}
 program         {return T_PROGRAM;}
 write           {return T_WRITE;}
+read            {return T_READ;}
 var             {return T_VAR;}
 integer	        {return T_INTEGER;}
 real	        {return T_REAL;}

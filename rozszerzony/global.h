@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <sstream>
+#include <fstream>
 #include "tabulate.h"
 using namespace std;
 using namespace tabulate;

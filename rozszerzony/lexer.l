@@ -32,12 +32,12 @@ function        {return T_FUNCTION;}
 if                                  {return T_IF;}
 then                                {return T_THEN;}
 else                                {return T_ELSE;}
-"<"			                        {yylval.relop = (char*) "jl"; return T_RELOP;}
-">"			                        {yylval.relop = (char*) "jg"; return T_RELOP;}
-"<="			                    {yylval.relop = (char*) "jle"; return T_RELOP;}
-">="			                    {yylval.relop = (char*) "jge"; return T_RELOP;}
-"="			                        {yylval.relop = (char*) "je"; return T_RELOP;}
-"<>"			                    {yylval.relop = (char*) "jne"; return T_RELOP;}
+"<"			                        {yylval.relop = "jl"; return T_RELOP;}
+">"			                        {yylval.relop = "jg"; return T_RELOP;}
+"<="			                    {yylval.relop = "jle"; return T_RELOP;}
+">="			                    {yylval.relop = "jge"; return T_RELOP;}
+"="			                        {yylval.relop = "je"; return T_RELOP;}
+"<>"			                    {yylval.relop = "jne"; return T_RELOP;}
 
                    
 "/"|div         {

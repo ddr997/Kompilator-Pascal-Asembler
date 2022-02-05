@@ -1,18 +1,12 @@
-program sort(input,output);
-var i,j,k:integer;
-var x,y,z:real;
+program example(input, output);
+var x, y: integer;
+var g, h:real;
+
+function sum(a,b,c: integer) : integer;
+begin
+sum := a + b
+end;
 
 begin
-  read(x,y);
-  if (x < 3) then
-	begin
-	if (y < 3) then
-		begin
-		write(x,y)
-	         end
-         else
-         write(y)
-         end
- else
- write(x)
+ write(sum(sum(1,2,4),sum(3,4,2),sum(5,3,1)))
 end.

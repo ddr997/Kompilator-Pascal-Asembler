@@ -6,8 +6,11 @@ extern int yylineno;
 Symtable SYMTABLE;
 vector <int> id_vector; //sluzy do przypisywania typow przy deklaracji
 vector <int> parameter_vector; //wektor parametrow procedury/funkcji
+vector <int> func_result; //wektor parametrow procedury/funkcji
+vector <int> parameter_memory; //wektor parametrow procedury/funkcji
 Scope actual_scope = Scope::GLOBAL; //okresla w ktorej czesci gramatyki jestesmy
 stringstream codeStream; //stringstream do wypisywania kodu
+ofstream myfile;
 
 int relop_true, relop_false = 0; //wpisuje do tablicy 0 i 1
 int labCounter = 0; //zmienna do numerowania labeli
@@ -18,7 +21,7 @@ int labCounter = 0; //zmienna do numerowania labeli
   int index; //indeks w tablicy symboli
   char operation; //arytmetyczne
   VarType variable_type; //typ zmiennych
-  char* relop; //relacyjne
+  const char* relop; //relacyjne
 }
 
 %token T_PROGRAM
@@ -56,10 +59,14 @@ int labCounter = 0; //zmienna do numerowania labeli
 
 
 %%
-start: program {SYMTABLE.print_table();}
+start: program {SYMTABLE.print_table(); 
+                myfile.close();
+                }
 
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
          declarations  {
+                       myfile.open ("output.asm");
+                       myfile << "Writing this to a file.\n";
                        actual_scope = Scope::LOCAL; //scope dla funkcji i procedur
                        SYMTABLE.global_variables_memory = SYMTABLE.table;
                        cout << "\n\tjump.i #lab0" << endl; 
@@ -268,7 +275,6 @@ statement: ID T_ASSIGN expression {
             T_THEN {
                    gencode("je", $3, relop_false, JUMP);
                    $<index>$ = labCounter; //label wyjsciowy z relopa, labCounter po wyjsciu z expression oznacza nastepny wolny label
-                   //codeStream << "nastepny wolny label: " + to_string(labCounter) << endl;
                    labCounter += 2; //dodajemy dla nastepnego porownania (expression obsluguje kod dla 2 labeli w przod)
                    }
             statement {
@@ -321,7 +327,13 @@ procedure_statement: ID {
                         }
                         } 
 
-                   | ID '(' expression_list ')' {
+                   | ID '(' {
+                    parameter_memory = parameter_vector;
+                    //for(int i = 0; i< memory.size(); i++){codeStream << " " + SYMTABLE.table[memory[i]].name << endl;}
+                    parameter_vector.clear();
+                   }
+                   
+                   expression_list ')' {
                                                 for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow oraz sprawdzanie ich typow
                                                 {
                                                   if(SYMTABLE.table[parameter_vector[i]].input_type == InputType::NUMBER) //jezeli parametrem jest czyta liczba
@@ -330,7 +342,7 @@ procedure_statement: ID {
                                                     if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::REAL && SYMTABLE.table[$1].vartype_vector[i] == VarType::INTEGER)
                                                       parameter_vector[i] = SYMTABLE.insert_to_table(to_string((int)stof(SYMTABLE.table[parameter_vector[i]].name)), InputType::NUMBER, SYMTABLE.table[parameter_vector[i]].vartype);
                                                     if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::INTEGER)
-                                                      SYMTABLE.table[parameter_vector[i]].vartype = VarType::REAL;
+                                                      SYMTABLE.table[parameter_vector[i]].vartype = VarType::INTEGER;
                                                     gencode("mov", parameter_vector[i], newtemp, -1); //nowa cyfra do zmiennej tymczasowej
                                                     parameter_vector[i] = newtemp; //zamien adresy
                                                   }
@@ -344,7 +356,8 @@ procedure_statement: ID {
                                                 }
                                                 codeStream << "\tcall.i #" + SYMTABLE.table[$1].name << endl; //wywolanie procedury
                                                 codeStream << "\tincsp.i #" + to_string(parameter_vector.size()*4) << endl; //podnosimy ze stosu tyle ile push 
-                                                parameter_vector.clear();
+                                                parameter_vector = parameter_memory;
+                                                parameter_memory.clear();
                                                 }
 
 
@@ -356,10 +369,15 @@ procedure_statement: ID {
 
 
 expression_list: expression {
+                            //codeStream << "single"<< endl;
                             parameter_vector.push_back($1); //zbiera indeksy z tablicy parametrow
                             $$ = $1;
                             }
-               | expression_list ',' expression {parameter_vector.push_back($3);} //to samo
+               | expression_list ',' expression { 
+                                                  //codeStream << "multiple"<< endl; //+ to_string($1 )
+                                                  parameter_vector.push_back($3);
+                                                  $$ = $3;
+                                                } 
 
 expression: expression '+' expression {
                                       if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype) //jezeli sa roznego typu
@@ -433,7 +451,13 @@ expression: expression '+' expression {
 
 
 
-          | ID '(' expression_list ')' {
+          | ID '(' {
+            parameter_memory = parameter_vector;
+            //for(int i = 0; i< parameter_memory.size(); i++){codeStream << " " + SYMTABLE.table[parameter_memory[i]].name << endl;}
+            parameter_vector.clear();
+            }
+          
+            expression_list ')' {
                                         for(int i = 0; i<parameter_vector.size(); i++) //odkladanie na stosie adresow parametrow
                                         {
                                           int newtemp = 0;
@@ -443,11 +467,12 @@ expression: expression '+' expression {
                                               newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[$1].vartype_vector[i]); //stworz zmienna ktora przechowa
                                             else
                                               newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, SYMTABLE.table[$1].vartype_vector[i]); //stworz zmienna ktora przechowa
+                                              
                                              //sprawdzenie typow argumentow 
                                             if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::REAL && SYMTABLE.table[$1].vartype_vector[i] == VarType::INTEGER)
                                               parameter_vector[i] = SYMTABLE.insert_to_table(to_string((int)stof(SYMTABLE.table[parameter_vector[i]].name)), InputType::NUMBER, SYMTABLE.table[parameter_vector[i]].vartype);
                                             if(SYMTABLE.table[parameter_vector[i]].vartype == VarType::INTEGER)
-                                              SYMTABLE.table[parameter_vector[i]].vartype = VarType::REAL;
+                                              SYMTABLE.table[parameter_vector[i]].vartype = VarType::INTEGER;
                                             gencode("mov", parameter_vector[i], newtemp, -1); //nowa cyfra do zmiennej tymczasowej
                                             parameter_vector[i] = newtemp; //zamien adresy
                                           }
@@ -493,10 +518,14 @@ expression: expression '+' expression {
                                         codeStream << "\tcall.i #" + SYMTABLE.table[$1].name << endl; //wywolanie funkcji
                                         codeStream << "\tincsp.i #" + to_string(parameter_vector.size()*4 + 4) << endl; //podnosimy ze stosu tyle ile push + 4 dla wyniku
 
-                                        //SYMTABLE.table[$1].address = SYMTABLE.table[newtemp].address; //przypisujemy tej funkcji adres wyniku
+                                        SYMTABLE.table[$1].address = SYMTABLE.table[newtemp].address; //przypisujemy tej funkcji adres wyniku
                                         SYMTABLE.table[$1].vartype = SYMTABLE.table[newtemp].vartype; //i typ wyniku
-                                        parameter_vector.clear();
+                                        //for(int i = 0; i< parameter_vector.size(); i++){codeStream << " " + SYMTABLE.table[parameter_vector[i]].name << endl;}
+                                        parameter_vector = parameter_memory;
+                                        parameter_memory.clear();
                                         $$ = newtemp; //przekaz dalej adres przechowujacy wynik
+                                        //$$ = $1;
+
                                        }
 
 

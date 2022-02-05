@@ -6,7 +6,6 @@ extern int yylineno;
 Symtable SYMTABLE;
 vector <int> id_vector; //sluzy do przypisywania typow przy deklaracji
 vector <int> parameter_vector; //wektor parametrow procedury/funkcji
-//vector <string> local_variables; // sluzy do usuwania zmiennych tymczasowych
 Scope actual_scope = Scope::GLOBAL; //okresla w ktorej czesci gramatyki jestesmy
 stringstream codeStream; //stringstream do wypisywania kodu
 
@@ -68,12 +67,11 @@ program: T_PROGRAM ID '(' program_identifier_list ')' ';'
                        labCounter += 1; //kolejny label
                        relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
                        relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
-                      //  for(int i = 0; i<SYMTABLE.global_variables_memory.size();i++)
-                      //   {cout << "wpisano " + SYMTABLE.global_variables_memory[i].name << endl;}
                        }
         subprogram_declarations {
                                 actual_scope = Scope::GLOBAL; //po wyjsciu z subprogramow
                                 codeStream << "lab0:" << endl;
+                                SYMTABLE.refresh_symtable();
                                 }
         compound_statement 
         '.' {
@@ -109,8 +107,6 @@ declarations: declarations T_VAR identifier_list ':' type ';' {
                                                                   if($5 == VarType::REAL)
                                                                     {SYMTABLE.next_local_address -= 8;}
                                                                   SYMTABLE.table[id_vector[i]].address = SYMTABLE.next_local_address;
-                                                                  //dodaj do wektora usuwajacego zmienne lokalne indeks dla temp
-                                                                  //local_variables.push_back(SYMTABLE.table[id_vector[i]].name); 
                                                                 }
 
                                                               }
@@ -134,7 +130,7 @@ standard_type: T_INTEGER {$$ = VarType::INTEGER;}
 
 
 
-subprogram_declarations: subprogram_declarations subprogram_declaration ';'
+subprogram_declarations: subprogram_declarations subprogram_declaration ';' 
                        | /* empty */
 
 subprogram_declaration: subprogram_head 
@@ -146,26 +142,7 @@ subprogram_declaration: subprogram_head
                                           cout << "\treturn" << endl;
                                           SYMTABLE.next_local_address = 0; //reset adresu lokalnego
                                           codeStream.str(""); //czyszczenie streamu
-
-                                          //czyszczenie tablicy symboli ze zmiennych tymczasowych
-                                          // for(int i = 0; i < local_variables.size(); i++)
-                                          // {
-                                          //   cout << "\t" + local_variables[i] << endl;
-                                          //   for(int j = 0; j < SYMTABLE.table.size(); j++)
-                                          //   {
-                                          //     if(local_variables[i] == SYMTABLE.table[j].name) SYMTABLE.table.erase(SYMTABLE.table.begin()+j);
-                                          //   }
-                                          // }
-                                          
-                                          //czyszczenie pamieci zmiennych lokalnych do zmiennych globalnych
-                                          for(int i = 0; i < SYMTABLE.global_variables_memory.size(); i++)
-                                          {
-                                            for(int j = 0; j < SYMTABLE.table.size(); j++)
-                                            {
-                                              if(SYMTABLE.global_variables_memory[i].name == SYMTABLE.table[j].name)
-                                                SYMTABLE.table[j] = SYMTABLE.global_variables_memory[i];
-                                            }
-                                          }
+                                          SYMTABLE.refresh_symtable();
                                           }
 
 subprogram_head: T_PROCEDURE ID arguments ';'{
@@ -178,7 +155,6 @@ subprogram_head: T_PROCEDURE ID arguments ';'{
                                              {
                                                SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
                                                SYMTABLE.next_parameter_address -= 4;
-                                               //local_variables.push_back(SYMTABLE.table[parameter_vector[i]].name); //dodawaj te zmienne do usuniecia po procedurze
                                                SYMTABLE.table[$2].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
                                              }
                                              SYMTABLE.next_parameter_address = 0;
@@ -258,12 +234,10 @@ statement: ID T_ASSIGN expression {
                                     if(SYMTABLE.table[$3].vartype == VarType::INTEGER) //jezeli jest int, to zamien na real
                                     {
                                       gencode("inttoreal", $3, newtemp, -1);
-                                      SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[$3].value;
                                     }
                                     if(SYMTABLE.table[$3].vartype == VarType::REAL) //jezeli jest real, to zamien na int
                                     {
                                       gencode("realtoint", $3, newtemp, -1);
-                                      SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[$3].value;
                                     }
                                     $3 = newtemp; //przypisz adres nowej zmiennej do atrybutu expression
                                   }
@@ -333,7 +307,7 @@ statement: ID T_ASSIGN expression {
 procedure_statement: ID {
                         if(SYMTABLE.table[$1].input_type == InputType::PROCEDURE) //wywolanie procedury bez parametrow
                           codeStream << "\tcall.i #" + SYMTABLE.table[$1].name << endl;
-                        else
+                        else //w przypadku wywolania funkcji
                         {
                           int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[$1].vartype);
                           codeStream << "\tpush.i #" + to_string(SYMTABLE.table[newtemp].address) << endl;
@@ -368,8 +342,8 @@ procedure_statement: ID {
                                                 }
 
 expression_list: expression {
-                            parameter_vector.push_back($1); //zbiera indeksy parametrow
-                            $$ = $1; //do write'a
+                            parameter_vector.push_back($1); //zbiera indeksy z tablicy parametrow
+                            $$ = $1;
                             }
                | expression_list ',' expression {parameter_vector.push_back($3);} //to samo
 
@@ -388,7 +362,6 @@ expression: expression '+' expression {
                                         if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);} //jezeli 3, to to samo
                                       }
                                       int newtemp = expression_result_temp_gen($1, $3);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value + SYMTABLE.table[$3].value; //przypisz tam wartosc
                                       $$ = newtemp; //przekaz dalej indeks wyniku
                                       gencode("add", $1, $3, newtemp);
                                       }
@@ -400,7 +373,6 @@ expression: expression '+' expression {
                                         if(SYMTABLE.table[$3].vartype == VarType::INTEGER) {$3 = type_conversion($3);}
                                       }
                                       int newtemp = expression_result_temp_gen($1, $3);
-                                      SYMTABLE.table[newtemp].value = SYMTABLE.table[$1].value - SYMTABLE.table[$3].value;
                                       $$ = newtemp;
                                       gencode("sub", $1, $3, newtemp);
                                       }
@@ -447,7 +419,6 @@ expression: expression '+' expression {
 
           | '-' expression {
                            int newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, SYMTABLE.table[$2].vartype);
-                           //SYMTABLE.table[newtemp].value = SYMTABLE.table[$2].value * (-1);
                            $$ = newtemp;
                            gencode("negation", 0, $2, newtemp);
                            }
@@ -525,7 +496,7 @@ expression: expression '+' expression {
 
 
           | ID  {
-                if(SYMTABLE.table[$1].input_type == InputType::FUNCTION)
+                if(SYMTABLE.table[$1].input_type == InputType::FUNCTION) //jezeli wywolujemy funkcje bez argumentu
                 { 
                   int newtemp = 0;
                   if(actual_scope == Scope::GLOBAL)
@@ -545,11 +516,11 @@ expression: expression '+' expression {
 
           | expression T_RELOP expression {
                                           int newtemp = 0;
-                                          gencode($2,$1,$3,JUMP); //instrukcja relop + wariant false
+                                          gencode($2,$1,$3,JUMP); //instrukcja relop i ponizej wariant false
                                           if(actual_scope == Scope::GLOBAL)
-                                            newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //przechowuje true albo False
+                                            newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //przechowuje wartosc logiczna
                                           else
-                                            newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER); //przechowuje true albo False
+                                            newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
                                           gencode("mov", relop_false, newtemp, -1);
                                           codeStream << "\tjump.i #lab" + to_string(labCounter+1) << endl; // aktualnie 1 + 1
 
@@ -558,7 +529,7 @@ expression: expression '+' expression {
                                           gencode("mov", relop_true, newtemp, -1);
                                           labCounter += 1; //zwiekszamy do 2
 
-                                          //zwiekszamy tutaj dla wiekszej ilosci relopow
+                                          //zwiekszamy tutaj dla wiekszej ilosci operacji relacji
                                           codeStream << "lab" + to_string(labCounter) + ":" << endl; //printujemy 2
                                           labCounter += 1; //zwiekszamy do 3
                                           
@@ -582,7 +553,7 @@ expression: expression '+' expression {
                               gencode("mov", relop_true, newtemp, -1);
                               labCounter += 1; //zwiekszamy do 2
 
-                              //zwiekszamy tutaj dla wiekszej ilosci relopow
+                              //zwiekszamy tutaj dla wiekszej ilosci operacji relacji
                               codeStream << "lab" + to_string(labCounter) + ":" << endl; //printujemy 2
                               labCounter += 1; //zwiekszamy do 3
 
@@ -639,7 +610,6 @@ int type_conversion(int i1)
       newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL);
     else
       newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL);
-    SYMTABLE.table[newtemp].value = (float) SYMTABLE.table[i1].value;
     gencode("inttoreal", i1, newtemp, -1);
   }
 
@@ -649,7 +619,6 @@ int type_conversion(int i1)
       newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER);
     else
       newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
-    SYMTABLE.table[newtemp].value = (int) SYMTABLE.table[i1].value;
     gencode("realtoint", i1, newtemp, -1);
   }
   return newtemp;
@@ -687,4 +656,3 @@ void destroy()
 {
   yylex_destroy();
 }
-

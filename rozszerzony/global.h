@@ -3,7 +3,9 @@
 #include <iostream>
 #include <stdio.h>
 #include <sstream>
+#include "tabulate.h"
 using namespace std;
+using namespace tabulate;
 
 void destroy();
 int yylex_destroy();
@@ -20,7 +22,6 @@ struct Record{
     InputType input_type = InputType::NONE;
     VarType vartype = VarType::NONE;
     Scope scope = Scope::GLOBAL;
-    float value = 0;
     int address = -1;
     vector <VarType> vartype_vector; //lista typow dla referencji
 };
@@ -35,5 +36,6 @@ class Symtable{
         int next_parameter_address = 0; //adresy dla parametrów w funkcjach/procedurach
         int insert_to_table(string, InputType, VarType);
         int find_in_table(string);
+        void refresh_symtable();
         void print_table();
 };

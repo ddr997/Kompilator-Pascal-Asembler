@@ -2,15 +2,16 @@ program example(input, output);
 var x, y: integer;
 var g,h:real;
 
-function f(a, b: real):real;
-var q:integer;
+function gcd(a, b: integer):integer;
 begin
-   q:=4;
-   f:=a+b+q
+  if b=0 then 
+    gcd:=a
+  else 
+    gcd:=gcd(b, a mod b)
 end;
 
 
 begin
-  g:=3.25 + q;
-  write(g)
+  read(x, y);
+  write(gcd(x, y))
 end.

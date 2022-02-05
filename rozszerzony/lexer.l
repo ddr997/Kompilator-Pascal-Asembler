@@ -75,7 +75,6 @@ do              {return T_DO;}
                 if(check_if_exists < 0)
                 {
                     yylval.index = SYMTABLE.insert_to_table(yytext, InputType::NUMBER, VarType::INTEGER);
-                    SYMTABLE.table[yylval.index].value = stoi(yytext);
                 }
                 else{ yylval.index = check_if_exists; }
                 return NUM;
@@ -90,8 +89,6 @@ do              {return T_DO;}
                 else
                 { 
                     yylval.index = check_if_exists;
-                    //SYMTABLE.global_variables_memory.push_back(SYMTABLE.table[check_if_exists]);
-                    //cout << "wpisano " + SYMTABLE.global_variables_memory[SYMTABLE.global_variables_memory.size()-1].name << endl;
                 }
                 return ID;
                 }
@@ -101,7 +98,6 @@ do              {return T_DO;}
                     if(check_if_exists < 0)
                     { 
                         yylval.index = SYMTABLE.insert_to_table(yytext, InputType::NUMBER, VarType::REAL);
-                        SYMTABLE.table[yylval.index].value = stof(yytext);
                     }
                     else{ yylval.index = check_if_exists; }
                     return NUM;

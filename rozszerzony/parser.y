@@ -66,24 +66,27 @@ start: program {SYMTABLE.print_table();
 program: T_PROGRAM ID '(' program_identifier_list ')' ';'
          declarations  {
                        myfile.open ("output.asm");
-                       myfile << "Writing this to a file.\n";
                        actual_scope = Scope::LOCAL; //scope dla funkcji i procedur
                        SYMTABLE.global_variables_memory = SYMTABLE.table;
-                       cout << "\n\tjump.i #lab0" << endl; 
+                      //  cout << "\n\tjump.i #lab0" << endl;
+                       myfile << "\tjump.i #lab0" << endl;
                        labCounter += 1; //kolejny label od 0
                        relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
                        relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
                        }
         subprogram_declarations {
                                 actual_scope = Scope::GLOBAL; //po wyjsciu z subprogramow
-                                codeStream << "lab0:" << endl;
+                                //cout << "lab0:" << endl;
+                                myfile << "lab0:" << endl;
                                 SYMTABLE.refresh_symtable();
                                 }
         compound_statement 
         '.' {
-            cout << codeStream.str();
+            // cout << codeStream.str();
+            myfile << codeStream.str();
             codeStream.str("");
-            printf("\texit\n\n\n");
+            //cout << "\texit\n\n\n" << endl;
+            myfile << "\texit" << endl;
             }
 
 program_identifier_list: ID | program_identifier_list ',' ID
@@ -142,10 +145,14 @@ subprogram_declarations: subprogram_declarations subprogram_declaration ';'
 subprogram_declaration: subprogram_head 
                         declarations
                         compound_statement{
-                                          cout << "\tenter.i #" + to_string(-1*SYMTABLE.next_local_address) << endl; //negujemy. bo next_local idzie w dol
-                                          cout << codeStream.str();
-                                          cout << "\tleave" << endl;
-                                          cout << "\treturn" << endl;
+                                          // cout << "\tenter.i #" + to_string(-1*SYMTABLE.next_local_address) << endl; //negujemy. bo next_local idzie w dol
+                                          // cout << codeStream.str();
+                                          // cout << "\tleave" << endl;
+                                          // cout << "\treturn" << endl;
+                                          myfile << "\tenter.i #" + to_string(-1*SYMTABLE.next_local_address) << endl; //negujemy. bo next_local idzie w dol
+                                          myfile << codeStream.str();
+                                          myfile << "\tleave" << endl;
+                                          myfile << "\treturn" << endl;
                                           SYMTABLE.next_local_address = 0; //reset adresu lokalnego
                                           codeStream.str(""); //czyszczenie streamu
                                           SYMTABLE.refresh_symtable();
@@ -153,7 +160,8 @@ subprogram_declaration: subprogram_head
 
 subprogram_head: T_PROCEDURE ID arguments ';'{
                                              SYMTABLE.table[$2].input_type = InputType::PROCEDURE;
-                                             cout << SYMTABLE.table[$2].name + ":" <<endl; //etykieta procedury
+                                            //  cout << SYMTABLE.table[$2].name + ":" <<endl; //etykieta procedury
+                                             myfile << SYMTABLE.table[$2].name + ":" <<endl; //etykieta procedury
 
                                              SYMTABLE.next_parameter_address = (int) parameter_vector.size()*4 + 4; //BP+4 dla adresu powrotu
                                              for (int i = 0; i< parameter_vector.size(); i++) //petla adresujaca adresy pushniete
@@ -170,7 +178,8 @@ subprogram_head: T_PROCEDURE ID arguments ';'{
               | T_FUNCTION ID arguments ':' standard_type ';' {
                                                               SYMTABLE.table[$2].input_type = InputType::FUNCTION;
                                                               SYMTABLE.table[$2].vartype = $5; //typ zwracany przez funkcje
-                                                              cout << SYMTABLE.table[$2].name + ":" <<endl; //etykieta funkcji
+                                                              // cout << SYMTABLE.table[$2].name + ":" <<endl; //etykieta funkcji
+                                                              myfile << SYMTABLE.table[$2].name + ":" <<endl; //etykieta funkcji
                                                               SYMTABLE.next_parameter_address = parameter_vector.size()*4 + 8; //BP+8, dla adresu zmiennej tymczasowej wyniku funkcji
                                                               for (int i = 0; i< parameter_vector.size(); i++) //petla adresujaca adresy pushniete
                                                               {

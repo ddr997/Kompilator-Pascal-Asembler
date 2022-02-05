@@ -1,18 +1,18 @@
-program example(input, output);
-var x, y: integer;
-var g,h:real;
-
-function gcd(a, b: integer):integer;
-var g,i:integer;
-begin
-  if b=0 then 
-    gcd:=a
-  else 
-    gcd:=gcd(b, a mod b)
-end;
-
+program sort(input,output);
+var i,j,k:integer;
+var x,y,z:real;
 
 begin
-  read(x, y);
-  write(gcd(x, y))
+  read(x,y);
+  if (x < 3) then
+	begin
+	if (y < 3) then
+		begin
+		write(x,y)
+	         end
+         else
+         write(y)
+         end
+ else
+ write(x)
 end.

@@ -11,7 +11,6 @@ stringstream codeStream; //stringstream do wypisywania kodu
 
 int relop_true, relop_false = 0; //wpisuje do tablicy 0 i 1
 int labCounter = 0; //zmienna do numerowania labeli
-int while_entry_label, relop_counter = 0; //zmienna przechowujaca wejsciowy label do petli; zmienna liczaca wystepowanie relopow
 
 %}
 
@@ -64,7 +63,7 @@ program: T_PROGRAM ID '(' program_identifier_list ')' ';'
                        actual_scope = Scope::LOCAL; //scope dla funkcji i procedur
                        SYMTABLE.global_variables_memory = SYMTABLE.table;
                        cout << "\n\tjump.i #lab0" << endl; 
-                       labCounter += 1; //kolejny label
+                       labCounter += 1; //kolejny label od 0
                        relop_false = SYMTABLE.insert_to_table("0", InputType::NUMBER, VarType::INTEGER);
                        relop_true = SYMTABLE.insert_to_table("1", InputType::NUMBER, VarType::INTEGER);
                        }
@@ -149,13 +148,12 @@ subprogram_head: T_PROCEDURE ID arguments ';'{
                                              SYMTABLE.table[$2].input_type = InputType::PROCEDURE;
                                              cout << SYMTABLE.table[$2].name + ":" <<endl; //etykieta procedury
 
-                                             SYMTABLE.next_parameter_address = (int) parameter_vector.size()*4 + 4; //BP+4 dla adresu powrotu, w odwrotnej kolejnosci na stosie
-                                             //cout << SYMTABLE.next_parameter_address << endl;
+                                             SYMTABLE.next_parameter_address = (int) parameter_vector.size()*4 + 4; //BP+4 dla adresu powrotu
                                              for (int i = 0; i< parameter_vector.size(); i++) //petla adresujaca adresy pushniete
                                              {
-                                               SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address;
+                                               SYMTABLE.table[parameter_vector[i]].address = SYMTABLE.next_parameter_address; //ustawia adresy parametrow
                                                SYMTABLE.next_parameter_address -= 4;
-                                               SYMTABLE.table[$2].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
+                                               SYMTABLE.table[$2].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype); //zapisz jakie typy
                                              }
                                              SYMTABLE.next_parameter_address = 0;
                                              parameter_vector.clear();
@@ -173,7 +171,6 @@ subprogram_head: T_PROCEDURE ID arguments ';'{
                                                                 SYMTABLE.next_parameter_address -= 4;
                                                                 SYMTABLE.table[$2].vartype_vector.push_back(SYMTABLE.table[parameter_vector[i]].vartype);
                                                               }
-                                                              //cout << to_string(parameter_vector.size()) << endl;
                                                               SYMTABLE.next_parameter_address = 0;
                                                               SYMTABLE.table[$2].address = 8; //przypisujemy adres powrotu do funkcji
                                                               parameter_vector.clear();
@@ -255,7 +252,7 @@ statement: ID T_ASSIGN expression {
           | T_READ '(' expression_list ')' {
                                 for(int i = 0; i<parameter_vector.size(); i++)
                                 {
-                                  gencode("write", parameter_vector[i], -1, -1);
+                                  gencode("read", parameter_vector[i], -1, -1);
                                 }
                                 parameter_vector.clear();
                                }
@@ -265,42 +262,51 @@ statement: ID T_ASSIGN expression {
           | compound_statement
 
           | T_IF {
+                 $<index>$ = labCounter; //zapisz wejsciowy label (default 1)
                  }
             expression
             T_THEN {
                    gencode("je", $3, relop_false, JUMP);
-                   }
-            statement {codeStream << "\tjump.i #lab" + to_string(labCounter+1) << endl;}//tutaj musi byc jump;
-            T_ELSE {
-                   codeStream << "lab" + to_string(labCounter) + ":" << endl;
-                   labCounter += 1;
+                   $<index>$ = labCounter; //label wyjsciowy z relopa, labCounter po wyjsciu z expression oznacza nastepny wolny label
+                   //codeStream << "nastepny wolny label: " + to_string(labCounter) << endl;
+                   labCounter += 2; //dodajemy dla nastepnego porownania (expression obsluguje kod dla 2 labeli w przod)
                    }
             statement {
-                      codeStream << "lab" + to_string(labCounter) + ":" << endl;
-                      labCounter += 1;
-                      //codeStream << "nastepny wolny: " + to_string(labCounter) << endl;
+                      codeStream << "\tjump.i #lab" + to_string($<index>5+1) << endl; //skok do wyjscia ze statementu
+                      $<index>$ = $<index>5; //wartosc labelu z else
+                      }
+            T_ELSE {
+                   codeStream << "lab" + to_string($<index>7) + ":" << endl;
+                   $<index>$ = $<index>7 + 1; //wartosc labelu wyjscia
+                   }
+            statement {
+                      codeStream << "lab" + to_string($<index>9) + ":" << endl; //label wyjsciowy
                       }
 
 
 
           | T_WHILE{
-                    while_entry_label = labCounter;
-                    codeStream << "lab" + to_string(labCounter+1) + ":" << endl; //label sprawdzajacy 1 wyzej od wejsciowego
-                    labCounter += 2; //z 1 do 3
+                    codeStream << "lab" + to_string(labCounter+1) + ":" << endl; //label warunku
+                    $<index>$ = labCounter; //d2 przekazuje label wejsciowy (defaultowo 1 po lab0)
+                    labCounter += 2; //wyprowadzone dla ifa
                    }
             expression
-            T_DO  {labCounter -= 2*relop_counter; //expression zwieksza o 2*relop_counter petle, wiec musimy sie confac o ilosc expression *2
-                  //codeStream << "zmniejsza o: " + to_string(labCounter) << endl;
-                  labCounter = while_entry_label;
-                  gencode("je", $3, relop_false, JUMP); 
+            T_DO  {
+                  int temp = labCounter; //odwolanie do labela wejsciowego, bo gencode wykorzystuje labCounter
+                  labCounter = $<index>2;
+                  gencode("je", $3, relop_false, JUMP);
+                  labCounter = temp;
+                  $<index>$ = $<index>2; //label wyjsciowy z petli
                   }
             statement {
-                      codeStream << "\tjump.i #lab" + to_string(while_entry_label+1) << endl;
-                      codeStream << "lab" + to_string(while_entry_label) + ":" << endl;
-                      labCounter += 2*relop_counter + 2;
-                      //codeStream << "nastepy wolny label: " + to_string(labCounter) << endl;
-                      relop_counter = 0;
+                      codeStream << "\tjump.i #lab" + to_string($<index>5+1) << endl;
+                      codeStream << "lab" + to_string($<index>5) + ":" << endl;
                       }
+
+
+
+
+
 
 
 
@@ -341,19 +347,19 @@ procedure_statement: ID {
                                                 parameter_vector.clear();
                                                 }
 
+
+
+
+
+
+
+
+
 expression_list: expression {
                             parameter_vector.push_back($1); //zbiera indeksy z tablicy parametrow
                             $$ = $1;
                             }
                | expression_list ',' expression {parameter_vector.push_back($3);} //to samo
-
-
-
-
-
-
-
-
 
 expression: expression '+' expression {
                                       if(SYMTABLE.table[$1].vartype != SYMTABLE.table[$3].vartype) //jezeli sa roznego typu
@@ -490,7 +496,7 @@ expression: expression '+' expression {
                                         //SYMTABLE.table[$1].address = SYMTABLE.table[newtemp].address; //przypisujemy tej funkcji adres wyniku
                                         SYMTABLE.table[$1].vartype = SYMTABLE.table[newtemp].vartype; //i typ wyniku
                                         parameter_vector.clear();
-                                        $$ = newtemp;
+                                        $$ = newtemp; //przekaz dalej adres przechowujacy wynik
                                        }
 
 
@@ -516,25 +522,23 @@ expression: expression '+' expression {
 
           | expression T_RELOP expression {
                                           int newtemp = 0;
-                                          gencode($2,$1,$3,JUMP); //instrukcja relop i ponizej wariant false
+                                          gencode($2,$1,$3,JUMP); //instrukcja relop i ponizej wariant false; pobiera globalnie labCounter
+                                          labCounter -= 2;
+
                                           if(actual_scope == Scope::GLOBAL)
                                             newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //przechowuje wartosc logiczna
                                           else
                                             newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
                                           gencode("mov", relop_false, newtemp, -1);
-                                          codeStream << "\tjump.i #lab" + to_string(labCounter+1) << endl; // aktualnie 1 + 1
 
+                                          codeStream << "\tjump.i #lab" + to_string(labCounter+3) << endl; 
                                           //wariant true
-                                          codeStream << "lab" + to_string(labCounter) + ":" << endl; //1
+                                          codeStream << "lab" + to_string(labCounter+2) + ":" << endl;
                                           gencode("mov", relop_true, newtemp, -1);
-                                          labCounter += 1; //zwiekszamy do 2
 
-                                          //zwiekszamy tutaj dla wiekszej ilosci operacji relacji
-                                          codeStream << "lab" + to_string(labCounter) + ":" << endl; //printujemy 2
-                                          labCounter += 1; //zwiekszamy do 3
-                                          
-                                          relop_counter += 1;
-                                          $$ = newtemp;
+                                          codeStream << "lab" + to_string(labCounter+3) + ":" << endl;
+                                          labCounter += 4; //nastepny wolny, relop zajmuje 3 labele, wiec musimy podniesc
+                                          $$ = newtemp; //przekazujemy adres wyniku dalej
                                           }
 
 
@@ -546,18 +550,15 @@ expression: expression '+' expression {
                               else
                                 newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
                               gencode("mov", relop_false, newtemp, -1);
-                              codeStream << "\tjump.i #lab" + to_string(labCounter+1) << endl; // aktualnie 1 + 1
+                              codeStream << "\tjump.i #lab" + to_string(labCounter+1) << endl;
 
                               //wariant true
-                              codeStream << "lab" + to_string(labCounter) + ":" << endl; //1
+                              codeStream << "lab" + to_string(labCounter) + ":" << endl;
                               gencode("mov", relop_true, newtemp, -1);
-                              labCounter += 1; //zwiekszamy do 2
 
-                              //zwiekszamy tutaj dla wiekszej ilosci operacji relacji
-                              codeStream << "lab" + to_string(labCounter) + ":" << endl; //printujemy 2
-                              labCounter += 1; //zwiekszamy do 3
-
-                              relop_counter += 1;
+                              codeStream << "lab" + to_string(labCounter+1) + ":" << endl;
+                              
+                              labCounter += 2; //not zajmuje 1 label, wiec trzeba podniesc
                               $$ = newtemp;
                               }
 %%
@@ -594,9 +595,9 @@ void gencode(string command, int i1, int i2, int i3) //przekazuje indeksy w tabl
     codeStream << "\t" << command+type_postfix << var1 << var2 << var3 << endl;
   if(actual_scope == Scope::LOCAL)
   {
-    if(var1[0] != '#' && var1 != "") if(var1[0] == '-') var1.insert(0,"BP"); else var1.insert(0,"*BP+");
-    if(var2[1] != '#' && var2 != "") if(var2[1] == '-') var2.insert(1,"BP"); else var2.insert(1,"*BP+");
-    if(var3[1] != '#' && var3 != "") if(var3[1] == '-') var3.insert(1,"BP"); else var3.insert(1,"*BP+");
+    if(var1 != "" && var1[0] != '#' ) if(var1[0] == '-') var1.insert(0,"BP"); else var1.insert(0,"*BP+");
+    if(var2 != "" && var2[1] != '#' ) if(var2[1] == '-') var2.insert(1,"BP"); else var2.insert(1,"*BP+");
+    if(var3 != "" && var3[1] != '#') if(var3[1] == '-') var3.insert(1,"BP"); else var3.insert(1,"*BP+");
     codeStream << "\t" << command+type_postfix << var1 << var2 << var3 << endl;
   }
 }
@@ -624,7 +625,7 @@ int type_conversion(int i1)
   return newtemp;
 }
 
-int expression_result_temp_gen(int i1, int i3)
+int expression_result_temp_gen(int i1, int i3) //generator tempa dla expression
 {
   int newtemp = 0;
   if(SYMTABLE.table[i1].vartype != SYMTABLE.table[i3].vartype) //jezeli sa roznego typu
@@ -640,16 +641,15 @@ int expression_result_temp_gen(int i1, int i3)
       if(actual_scope == Scope::GLOBAL)
         newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::INTEGER); //stworz zmienna na wynik typu int
       else
-        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER); //stworz zmienna na wynik typu in
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::INTEGER);
     if (SYMTABLE.table[i1].vartype == VarType::REAL)
       if(actual_scope == Scope::GLOBAL)
         newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY, VarType::REAL); //stworz zmienna na wynik typu real
       else
-        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL); //stworz zmienna na wynik typu real
+        newtemp = SYMTABLE.insert_to_table("$t", InputType::TEMPORARY_LOCAL, VarType::REAL);
   }
   return newtemp;
 }
-
 
 
 void destroy()

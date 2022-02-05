@@ -1,14 +1,14 @@
 compiler: parser.o lexer.o symtable.o
-	g++ parser.o lexer.o symtable.o -o compiler
+	g++ -g parser.o lexer.o symtable.o -o compiler
 
 parser.o: parser.cpp global.h
-	g++ -c parser.cpp
+	g++ -c -g parser.cpp
 
 lexer.o : lexer.cpp parser.hpp global.h
-	g++ -c lexer.cpp
+	g++ -c -g lexer.cpp
 
 symtable.o: symtable.cpp global.h
-	g++ -c symtable.cpp
+	g++ -c -g symtable.cpp
 
 parser.cpp parser.hpp: parser.y
 	bison -d -v -o parser.cpp parser.y
